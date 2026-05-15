@@ -64,17 +64,9 @@
         }
 
         @keyframes unfold {
-            0% {
-                transform: scaleY(0);
-                opacity: 0;
-            }
-            50% {
-                transform: scaleY(0.5);
-            }
-            100% {
-                transform: scaleY(1);
-                opacity: 1;
-            }
+            0% { transform: scaleY(0); opacity: 0; }
+            50% { transform: scaleY(0.5); }
+            100% { transform: scaleY(1); opacity: 1; }
         }
 
         .logo {
@@ -105,17 +97,6 @@
             50% { opacity: 1; }
         }
 
-        /* Dust & Smoke Effects */
-        .dust {
-            position: absolute;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            pointer-events: none;
-        }
-
         /* UI Overlay */
         #uiLayer {
             position: absolute;
@@ -138,6 +119,8 @@
             font-size: 14px;
             color: #ffcc00;
             z-index: 200;
+            max-height: 300px;
+            overflow-y: auto;
         }
 
         .stat-row {
@@ -166,12 +149,14 @@
             transform: translateX(-50%);
             width: 90%;
             max-width: 500px;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             border: 2px solid #ff6600;
             border-radius: 5px;
             padding: 15px;
             z-index: 200;
             display: none;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .combat-ui.active {
@@ -194,6 +179,7 @@
             border-radius: 3px;
             transition: all 0.2s;
             pointer-events: auto;
+            font-size: 12px;
         }
 
         .action-btn:hover {
@@ -212,11 +198,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 10, 0.95);
+            background: rgba(10, 10, 10, 0.98);
             display: none;
             z-index: 500;
             justify-content: center;
             align-items: center;
+            overflow-y: auto;
         }
 
         .menu-screen.active {
@@ -224,18 +211,19 @@
         }
 
         .menu-content {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             border: 3px solid #ffcc00;
-            padding: 40px;
+            padding: 30px;
             border-radius: 10px;
             text-align: center;
-            max-width: 400px;
+            max-width: 500px;
+            margin: 20px;
         }
 
         .menu-title {
             font-size: 2em;
             color: #ffcc00;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
@@ -243,7 +231,7 @@
             display: block;
             width: 100%;
             padding: 12px;
-            margin: 10px 0;
+            margin: 8px 0;
             background: #333;
             border: 2px solid #ffcc00;
             color: #ffcc00;
@@ -258,6 +246,273 @@
             background: #ffcc00;
             color: #000;
             transform: scale(1.05);
+        }
+
+        .form-group {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ffcc00;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #666;
+            color: #fff;
+            border-radius: 3px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ffcc00;
+            box-shadow: 0 0 5px rgba(255,204,0,0.5);
+        }
+
+        .character-preview {
+            background: #111;
+            border: 2px solid #666;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 600;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ff6600;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #ff6600;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 1.5em;
+            color: #fff;
+            cursor: pointer;
+            pointer-events: auto;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: #ff6600;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .inventory-item {
+            background: #222;
+            border: 2px solid #666;
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+
+        .inventory-item:hover {
+            border-color: #ffcc00;
+            background: #333;
+        }
+
+        .inventory-item.rare {
+            border-color: #00ff00;
+        }
+
+        .inventory-item.epic {
+            border-color: #0088ff;
+        }
+
+        .inventory-item.legendary {
+            border-color: #ff6600;
+        }
+
+        .inventory-item.mythic {
+            border-color: #ff00ff;
+        }
+
+        .stat-allocation {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-box {
+            background: #222;
+            border: 1px solid #666;
+            padding: 10px;
+            text-align: center;
+            border-radius: 3px;
+        }
+
+        .stat-box label {
+            display: block;
+            color: #ffcc00;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-input {
+            width: 100%;
+            padding: 5px;
+            background: #111;
+            border: 1px solid #666;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+        }
+
+        .stat-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .stat-btn {
+            flex: 1;
+            padding: 5px;
+            background: #444;
+            border: 1px solid #666;
+            color: #ffcc00;
+            cursor: pointer;
+            border-radius: 2px;
+            font-size: 10px;
+            pointer-events: auto;
+        }
+
+        .stat-btn:hover {
+            background: #666;
+        }
+
+        .marketplace-item {
+            background: #222;
+            border: 1px solid #666;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .marketplace-item.selling {
+            border-color: #00ff00;
+        }
+
+        .skill-card {
+            background: #222;
+            border: 1px solid #666;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            pointer-events: auto;
+        }
+
+        .skill-card.locked {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background: #111;
+            border: 1px solid #666;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ffcc00);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 8px 12px;
+            background: #333;
+            border: 1px solid #666;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            pointer-events: auto;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #ffcc00;
+            color: #000;
+            border-color: #ffcc00;
+        }
+
+        .tab-btn:hover {
+            border-color: #ffcc00;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
     </style>
 </head>
@@ -278,6 +533,9 @@
         <div id="uiLayer">
             <!-- HUD -->
             <div class="hud" id="hud">
+                <div style="margin-bottom: 10px; border-bottom: 1px solid #666; padding-bottom: 10px;">
+                    <strong id="playerNameDisplay">Hero</strong>
+                </div>
                 <div class="stat-row">
                     <span>Level:</span>
                     <span id="levelDisplay">1</span>
@@ -298,6 +556,26 @@
                     <span>Credits:</span>
                     <span id="creditsDisplay">0</span>
                 </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #666;">
+                    <strong style="font-size: 12px;">Stats:</strong>
+                    <div class="stat-row" style="font-size: 12px;">
+                        <span>STR:</span>
+                        <span id="strDisplay">5</span>
+                    </div>
+                    <div class="stat-row" style="font-size: 12px;">
+                        <span>INT:</span>
+                        <span id="intDisplay">5</span>
+                    </div>
+                    <div class="stat-row" style="font-size: 12px;">
+                        <span>DEF:</span>
+                        <span id="defDisplay">5</span>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #666;">
+                    <button class="action-btn" id="inventoryBtn" style="width: 100%; pointer-events: auto;">Inventory</button>
+                    <button class="action-btn" id="skillsBtn" style="width: 100%; pointer-events: auto; margin-top: 5px;">Skills</button>
+                    <button class="action-btn" id="marketplaceBtn" style="width: 100%; pointer-events: auto; margin-top: 5px;">Marketplace</button>
+                </div>
             </div>
 
             <!-- Minimap -->
@@ -315,7 +593,7 @@
             </div>
         </div>
 
-        <!-- Menu Screen -->
+        <!-- Main Menu Screen -->
         <div class="menu-screen active" id="menuScreen">
             <div class="menu-content">
                 <div class="menu-title">⚔️ Fantasy RPG ⚔️</div>
@@ -325,12 +603,272 @@
                 <button class="menu-btn" id="logoutBtn">Logout</button>
             </div>
         </div>
+
+        <!-- Character Creation Screen -->
+        <div class="menu-screen" id="charCreationScreen">
+            <div class="menu-content" style="max-width: 450px; max-height: 90vh; overflow-y: auto;">
+                <div class="menu-title">Create Your Hero</div>
+
+                <div class="form-group">
+                    <label>Character Name</label>
+                    <input type="text" id="charNameInput" placeholder="Enter your hero name" maxlength="20">
+                </div>
+
+                <div class="form-group">
+                    <label>Gender</label>
+                    <select id="genderSelect">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="neutral">Neutral</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Skin Color</label>
+                    <select id="skinSelect">
+                        <option value="fair">Fair</option>
+                        <option value="tan">Tan</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Hair Color</label>
+                    <select id="hairColorSelect">
+                        <option value="black">Black</option>
+                        <option value="brown">Brown</option>
+                        <option value="blonde">Blonde</option>
+                        <option value="red">Red</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Starting Weapon</label>
+                    <select id="weaponSelect">
+                        <option value="sword">Sword</option>
+                        <option value="bow">Bow</option>
+                        <option value="dagger">Dagger</option>
+                        <option value="staff">Staff</option>
+                        <option value="hammer">Hammer</option>
+                    </select>
+                </div>
+
+                <div class="character-preview" id="charPreview">
+                    <div style="font-size: 3em;">🧙‍♂️</div>
+                </div>
+
+                <button class="menu-btn" id="createCharBtn">Create Character</button>
+                <button class="menu-btn" style="background: #555;">Back</button>
+            </div>
+        </div>
+
+        <!-- Inventory Modal -->
+        <div class="modal" id="inventoryModal">
+            <div class="modal-content">
+                <div>
+                    <button class="close-btn" onclick="game.closeModal('inventoryModal')">×</button>
+                    <div class="modal-title">Inventory</div>
+                </div>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="weapons">Weapons</button>
+                    <button class="tab-btn" data-tab="armor">Armor</button>
+                    <button class="tab-btn" data-tab="materials">Materials</button>
+                    <button class="tab-btn" data-tab="consumables">Consumables</button>
+                </div>
+
+                <div id="weapons" class="tab-content active">
+                    <div id="weaponsInventory" class="inventory-grid"></div>
+                </div>
+
+                <div id="armor" class="tab-content">
+                    <div id="armorInventory" class="inventory-grid"></div>
+                </div>
+
+                <div id="materials" class="tab-content">
+                    <div id="materialsInventory" class="inventory-grid"></div>
+                </div>
+
+                <div id="consumables" class="tab-content">
+                    <div id="consumablesInventory" class="inventory-grid"></div>
+                </div>
+
+                <div id="itemDetails" style="margin-top: 15px; padding: 10px; background: #111; border-radius: 3px; display: none;">
+                    <div id="itemName" style="color: #ffcc00; font-weight: bold; margin-bottom: 5px;"></div>
+                    <div id="itemStats"></div>
+                    <div style="margin-top: 10px;">
+                        <button class="menu-btn" id="equipBtn" style="display: none;">Equip</button>
+                        <button class="menu-btn" id="sellBtn" style="display: none;">Sell</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Modal -->
+        <div class="modal" id="skillsModal">
+            <div class="modal-content">
+                <div>
+                    <button class="close-btn" onclick="game.closeModal('skillsModal')">×</button>
+                    <div class="modal-title">Skills & Mastery</div>
+                </div>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="sword">Sword Mastery</button>
+                    <button class="tab-btn" data-tab="bow">Bow Mastery</button>
+                    <button class="tab-btn" data-tab="magic">Magic Mastery</button>
+                </div>
+
+                <div id="sword" class="tab-content active">
+                    <div id="swordSkills"></div>
+                </div>
+
+                <div id="bow" class="tab-content">
+                    <div id="bowSkills"></div>
+                </div>
+
+                <div id="magic" class="tab-content">
+                    <div id="magicSkills"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Marketplace Modal -->
+        <div class="modal" id="marketplaceModal">
+            <div class="modal-content">
+                <div>
+                    <button class="close-btn" onclick="game.closeModal('marketplaceModal')">×</button>
+                    <div class="modal-title">Marketplace</div>
+                </div>
+
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="browse">Browse Items</button>
+                    <button class="tab-btn" data-tab="selling">My Listings</button>
+                    <button class="tab-btn" data-tab="sell">Sell Item</button>
+                </div>
+
+                <div id="browse" class="tab-content active">
+                    <div id="marketplaceItems"></div>
+                </div>
+
+                <div id="selling" class="tab-content">
+                    <div id="sellingItems"></div>
+                </div>
+
+                <div id="sell" class="tab-content">
+                    <select id="sellItemSelect" style="width: 100%; padding: 8px; background: #222; border: 1px solid #666; color: #fff; margin-bottom: 10px;">
+                        <option value="">Select item to sell</option>
+                    </select>
+                    <input type="number" id="sellPriceInput" placeholder="Enter price" style="width: 100%; padding: 8px; background: #222; border: 1px solid #666; color: #fff; margin-bottom: 10px;">
+                    <button class="menu-btn" id="sellSubmitBtn">List for Sale</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Allocation Screen -->
+        <div class="modal" id="statAllocationModal">
+            <div class="modal-content">
+                <div class="modal-title">Allocate Stat Points</div>
+                <p style="color: #fff; margin-bottom: 15px;">You have <span id="statPointsRemaining">3</span> points to allocate</p>
+
+                <div class="stat-allocation">
+                    <div class="stat-box">
+                        <label>STR (Strength)</label>
+                        <input type="number" id="strAlloc" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('str', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('str', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <label>INT (Intelligence)</label>
+                        <input type="number" id="intAlloc" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('int', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('int', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <label>DEF (Defense)</label>
+                        <input type="number" id="defAlloc" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('def', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('def', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <label>AGI (Agility)</label>
+                        <input type="number" id="agiAlloc" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('agi', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('agi', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <label>CRT (Critical)</label>
+                        <input type="number" id="crtAlloc" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('crt', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('crt', 1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="stat-box">
+                        <label>AGI (Agility)</label>
+                        <input type="number" id="agiAlloc2" value="0" class="stat-input" readonly>
+                        <div class="stat-buttons">
+                            <button class="stat-btn" onclick="game.allocateStat('agi', -1)">-</button>
+                            <button class="stat-btn" onclick="game.allocateStat('agi', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="menu-btn" id="confirmStatBtn" style="margin-top: 20px;">Confirm Allocation</button>
+            </div>
+        </div>
     </div>
 
     <script>
         // ============================================
-        // GAME ENGINE - Fantasy Raycasting RPG
+        // COMPLETE FANTASY RAYCASTING RPG
         // ============================================
+
+        const ITEM_DATABASE = {
+            sword: { name: 'Iron Sword', type: 'weapon', rarity: 'common', stats: { str: 5 }, level: 1, emoji: '⚔️' },
+            dagger: { name: 'Dagger', type: 'weapon', rarity: 'common', stats: { str: 3, agi: 2 }, level: 1, emoji: '🗡️' },
+            bow: { name: 'Wooden Bow', type: 'weapon', rarity: 'common', stats: { str: 2, agi: 4 }, level: 1, emoji: '🏹' },
+            staff: { name: 'Wooden Staff', type: 'weapon', rarity: 'common', stats: { int: 5 }, level: 1, emoji: '🎯' },
+            hammer: { name: 'Iron Hammer', type: 'weapon', rarity: 'common', stats: { str: 8, def: 2 }, level: 1, emoji: '🔨' },
+            leather_armor: { name: 'Leather Armor', type: 'armor', rarity: 'common', stats: { def: 3 }, level: 1, emoji: '🛡️' },
+            slime_gel: { name: 'Slime Gel', type: 'material', rarity: 'common', value: 5, emoji: '💧' },
+            broken_bone: { name: 'Broken Bone', type: 'material', rarity: 'common', value: 5, emoji: '🦴' },
+            goblin_ear: { name: 'Goblin Ear', type: 'material', rarity: 'common', value: 5, emoji: '👂' },
+            health_potion: { name: 'Health Potion', type: 'consumable', effect: 'heal', value: 30, emoji: '🧪' },
+            mana_potion: { name: 'Mana Potion', type: 'consumable', effect: 'mana', value: 20, emoji: '🔵' }
+        };
+
+        const SKILLS_DATABASE = {
+            sword: [
+                { name: 'Slash', level: 0, masteryRequired: 0, description: 'Basic attack', damage: 1.0 },
+                { name: 'Heavy Slash', level: 5, masteryRequired: 25, description: 'Powerful attack', damage: 1.5 },
+                { name: 'Spin Attack', level: 10, masteryRequired: 50, description: 'Hit all enemies', damage: 1.2 },
+                { name: 'Flame Slash', level: 15, masteryRequired: 100, description: 'Slash with fire', damage: 1.8 }
+            ],
+            bow: [
+                { name: 'Shot', level: 0, masteryRequired: 0, description: 'Basic shot', damage: 1.0 },
+                { name: 'Double Shot', level: 5, masteryRequired: 25, description: 'Two arrows', damage: 0.8 },
+                { name: 'Rain Arrow', level: 10, masteryRequired: 50, description: 'Arrows from sky', damage: 1.2 },
+                { name: 'Poison Arrow', level: 15, masteryRequired: 100, description: 'Poisoned arrow', damage: 0.9 }
+            ],
+            magic: [
+                { name: 'Fireball', level: 5, masteryRequired: 20, description: 'Fire damage', damage: 1.5 },
+                { name: 'Ice Spike', level: 10, masteryRequired: 50, description: 'Ice damage', damage: 1.3 },
+                { name: 'Lightning', level: 15, masteryRequired: 100, description: 'Electric damage', damage: 1.7 }
+            ]
+        };
 
         class GameEngine {
             constructor() {
@@ -344,17 +882,19 @@
                 this.minimapCanvas.width = 120;
                 this.minimapCanvas.height = 120;
 
-                this.gameState = 'menu'; // menu, exploration, combat
+                this.gameState = 'menu';
                 this.running = false;
 
                 this.initPlayer();
                 this.initWorld();
                 this.initEventListeners();
                 this.setupMenu();
+                this.setupTabButtons();
             }
 
             initPlayer() {
                 this.player = {
+                    name: 'Hero',
                     x: 100,
                     y: 100,
                     angle: 0,
@@ -365,54 +905,63 @@
                     exp: 0,
                     maxExp: 100,
                     credits: 0,
+                    statPoints: 0,
 
                     hp: 100,
                     maxHp: 100,
                     mp: 50,
                     maxMp: 50,
 
-                    stats: {
-                        str: 5,
-                        int: 5,
-                        def: 5,
-                        agi: 5,
-                        crt: 5
-                    },
+                    stats: { str: 5, int: 5, def: 5, agi: 5, crt: 5 },
+                    baseStats: { str: 5, int: 5, def: 5, agi: 5, crt: 5 },
+                    tempAllocations: { str: 0, int: 0, def: 0, agi: 0, crt: 0 },
 
-                    weapon: 'sword',
-                    armor: 'leather',
-                    inventory: []
+                    equipment: {
+                        weapon: 'sword',
+                        armor: 'leather_armor',
+                    },
+                    inventory: [
+                        { id: 'sword', quantity: 1 },
+                        { id: 'leather_armor', quantity: 1 },
+                        { id: 'health_potion', quantity: 5 },
+                        { id: 'slime_gel', quantity: 3 }
+                    ],
+                    mastery: {
+                        sword: 0,
+                        bow: 0,
+                        magic: 0
+                    },
+                    marketListing: []
                 };
             }
 
             initWorld() {
-                // Simple world map with walls
                 this.worldMap = [
-                    [1,1,1,1,1,1,1,1,1,1],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,1,1,0,0,0,0,1],
-                    [1,0,0,1,1,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,1],
-                    [1,1,1,1,1,1,1,1,1,1]
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,0,0,0,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,1,1,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
                 ];
 
                 this.tileSize = 64;
                 this.monsters = [];
-                this.items = [];
-
                 this.spawnInitialMonsters();
             }
 
             spawnInitialMonsters() {
                 const monsterTypes = ['goblin', 'skeleton', 'slime'];
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 10; i++) {
                     const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
-                    const x = Math.random() * 600 + 100;
-                    const y = Math.random() * 600 + 100;
+                    const x = Math.random() * 900 + 100;
+                    const y = Math.random() * 700 + 100;
 
                     if (this.isWalkable(x, y)) {
                         this.monsters.push(this.createMonster(type, x, y));
@@ -457,31 +1006,62 @@
                 window.addEventListener('keydown', (e) => this.handleInput(e));
                 window.addEventListener('keyup', (e) => this.handleInputRelease(e));
 
-                document.getElementById('newGameBtn').addEventListener('click', () => this.startNewGame());
-                document.getElementById('continueBtn').addEventListener('click', () => this.continueGame());
+                document.getElementById('newGameBtn').addEventListener('click', () => this.showCharCreation());
+                document.getElementById('continueBtn').addEventListener('click', () => this.startNewGame());
                 document.getElementById('settingsBtn').addEventListener('click', () => this.openSettings());
                 document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
 
-                // Combat buttons
                 document.getElementById('attackBtn').addEventListener('click', () => this.playerAttack());
                 document.getElementById('skillBtn').addEventListener('click', () => this.useSkill());
                 document.getElementById('itemBtn').addEventListener('click', () => this.useItem());
                 document.getElementById('fleeBtn').addEventListener('click', () => this.fleeCombat());
+
+                document.getElementById('inventoryBtn').addEventListener('click', () => this.openInventory());
+                document.getElementById('skillsBtn').addEventListener('click', () => this.openSkills());
+                document.getElementById('marketplaceBtn').addEventListener('click', () => this.openMarketplace());
+
+                // Character Creation
+                document.getElementById('createCharBtn').addEventListener('click', () => this.createCharacter());
             }
 
-            setupMenu() {
-                document.getElementById('menuScreen').classList.add('active');
+            setupTabButtons() {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const modal = e.target.closest('.modal') || e.target.closest('[class*="Screen"]');
+                        if (!modal) return;
+
+                        const tabName = e.target.dataset.tab;
+                        const tabs = modal.querySelectorAll('.tab-content');
+                        const buttons = modal.querySelectorAll('.tab-btn');
+
+                        tabs.forEach(t => t.classList.remove('active'));
+                        buttons.forEach(b => b.classList.remove('active'));
+
+                        modal.querySelector(`#${tabName}`).classList.add('active');
+                        e.target.classList.add('active');
+                    });
+                });
+            }
+
+            showCharCreation() {
+                document.getElementById('menuScreen').classList.remove('active');
+                document.getElementById('charCreationScreen').classList.add('active');
+            }
+
+            createCharacter() {
+                const name = document.getElementById('charNameInput').value || 'Hero';
+                this.player.name = name;
+
+                document.getElementById('charCreationScreen').classList.remove('active');
+                this.startNewGame();
             }
 
             startNewGame() {
                 this.gameState = 'exploration';
                 document.getElementById('menuScreen').classList.remove('active');
+                document.getElementById('charCreationScreen').classList.remove('active');
                 this.running = true;
                 this.gameLoop();
-            }
-
-            continueGame() {
-                this.startNewGame();
             }
 
             openSettings() {
@@ -492,6 +1072,178 @@
                 this.running = false;
                 this.gameState = 'menu';
                 document.getElementById('menuScreen').classList.add('active');
+                document.getElementById('charCreationScreen').classList.remove('active');
+            }
+
+            openInventory() {
+                this.refreshInventory();
+                document.getElementById('inventoryModal').classList.add('active');
+            }
+
+            refreshInventory() {
+                const categories = ['weapons', 'armor', 'materials', 'consumables'];
+
+                categories.forEach(cat => {
+                    const container = document.getElementById(cat + 'Inventory');
+                    container.innerHTML = '';
+
+                    this.player.inventory.forEach(invItem => {
+                        const itemData = ITEM_DATABASE[invItem.id];
+                        if (!itemData) return;
+
+                        const categoryMap = {
+                            'weapon': 'weapons',
+                            'armor': 'armor',
+                            'material': 'materials',
+                            'consumable': 'consumables'
+                        };
+
+                        if (categoryMap[itemData.type] === cat) {
+                            const div = document.createElement('div');
+                            div.className = `inventory-item ${itemData.rarity || ''}`;
+                            div.textContent = `${itemData.emoji}\n${invItem.quantity}x`;
+                            div.style.cursor = 'pointer';
+                            div.onclick = () => this.showItemDetails(invItem.id);
+                            container.appendChild(div);
+                        }
+                    });
+                });
+            }
+
+            showItemDetails(itemId) {
+                const item = ITEM_DATABASE[itemId];
+                const details = document.getElementById('itemDetails');
+                details.style.display = 'block';
+
+                document.getElementById('itemName').textContent = item.emoji + ' ' + item.name;
+
+                let statsHTML = '';
+                if (item.stats) {
+                    Object.entries(item.stats).forEach(([stat, value]) => {
+                        statsHTML += `<div>${stat.toUpperCase()}: +${value}</div>`;
+                    });
+                }
+                document.getElementById('itemStats').innerHTML = statsHTML;
+            }
+
+            openSkills() {
+                this.refreshSkills();
+                document.getElementById('skillsModal').classList.add('active');
+            }
+
+            refreshSkills() {
+                const weaponTypes = ['sword', 'bow', 'magic'];
+
+                weaponTypes.forEach(weapon => {
+                    const container = document.getElementById(weapon + 'Skills');
+                    container.innerHTML = '';
+
+                    const mastery = this.player.mastery[weapon] || 0;
+                    const skills = SKILLS_DATABASE[weapon] || [];
+
+                    skills.forEach(skill => {
+                        const unlocked = mastery >= skill.masteryRequired;
+                        const div = document.createElement('div');
+                        div.className = `skill-card ${!unlocked ? 'locked' : ''}`;
+
+                        div.innerHTML = `
+                            <div style="color: #ffcc00; font-weight: bold;">${skill.name}</div>
+                            <div style="font-size: 12px; color: #aaa;">${skill.description}</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${(mastery / skill.masteryRequired * 100) || 0}%"></div>
+                            </div>
+                            <div style="font-size: 11px; color: #666;">Mastery: ${mastery}/${skill.masteryRequired}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                });
+            }
+
+            openMarketplace() {
+                this.refreshMarketplace();
+                document.getElementById('marketplaceModal').classList.add('active');
+            }
+
+            refreshMarketplace() {
+                // Browse items (simulated player market)
+                const browse = document.getElementById('marketplaceItems');
+                browse.innerHTML = '<div style="color: #aaa;">Items from other players will appear here</div>';
+
+                // My listings
+                const selling = document.getElementById('sellingItems');
+                selling.innerHTML = '';
+
+                this.player.marketListing.forEach((listing, idx) => {
+                    const item = ITEM_DATABASE[listing.itemId];
+                    const div = document.createElement('div');
+                    div.className = 'marketplace-item selling';
+                    div.innerHTML = `
+                        <div>
+                            <div style="color: #ffcc00; font-weight: bold;">${item.emoji} ${item.name}</div>
+                            <div style="font-size: 12px; color: #aaa;">Price: ${listing.price} credits</div>
+                        </div>
+                        <button class="action-btn" onclick="game.removeListing(${idx})">Cancel</button>
+                    `;
+                    selling.appendChild(div);
+                });
+
+                // Sell item select
+                const sellSelect = document.getElementById('sellItemSelect');
+                sellSelect.innerHTML = '<option value="">Select item to sell</option>';
+
+                this.player.inventory.forEach(invItem => {
+                    const item = ITEM_DATABASE[invItem.id];
+                    const option = document.createElement('option');
+                    option.value = invItem.id;
+                    option.textContent = `${item.emoji} ${item.name}`;
+                    sellSelect.appendChild(option);
+                });
+
+                document.getElementById('sellSubmitBtn').onclick = () => this.listItemForSale();
+            }
+
+            listItemForSale() {
+                const itemId = document.getElementById('sellItemSelect').value;
+                const price = parseInt(document.getElementById('sellPriceInput').value);
+
+                if (!itemId || !price || price < 1) {
+                    alert('Please select an item and enter a valid price');
+                    return;
+                }
+
+                this.player.marketListing.push({ itemId, price });
+                this.refreshMarketplace();
+                alert('Item listed for sale!');
+            }
+
+            removeListing(idx) {
+                this.player.marketListing.splice(idx, 1);
+                this.refreshMarketplace();
+            }
+
+            closeModal(modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+
+            allocateStat(stat, amount) {
+                const remaining = 3 - Object.values(this.player.tempAllocations).reduce((a, b) => a + b, 0);
+
+                if (amount > 0 && remaining > 0) {
+                    this.player.tempAllocations[stat]++;
+                } else if (amount < 0 && this.player.tempAllocations[stat] > 0) {
+                    this.player.tempAllocations[stat]--;
+                }
+
+                this.updateStatAllocationDisplay();
+            }
+
+            updateStatAllocationDisplay() {
+                const remaining = 3 - Object.values(this.player.tempAllocations).reduce((a, b) => a + b, 0);
+                document.getElementById('statPointsRemaining').textContent = remaining;
+
+                Object.entries(this.player.tempAllocations).forEach(([stat, value]) => {
+                    document.getElementById(stat + 'Alloc').value = value;
+                });
             }
 
             onResize() {
@@ -505,6 +1257,9 @@
                 if (key === 's' || key === 'arrowdown') this.player.moveBackward = true;
                 if (key === 'a' || key === 'arrowleft') this.player.turnLeft = true;
                 if (key === 'd' || key === 'arrowright') this.player.turnRight = true;
+                if (key === 'i') this.openInventory();
+                if (key === 'k') this.openSkills();
+                if (key === 'm') this.openMarketplace();
             }
 
             handleInputRelease(e) {
@@ -536,7 +1291,6 @@
                     this.player.y = newY;
                 }
 
-                // Check collision with monsters
                 this.checkMonsterCollision();
             }
 
@@ -555,9 +1309,6 @@
             startCombat(monster) {
                 this.gameState = 'combat';
                 this.currentMonster = monster;
-                this.combatLog = [];
-                this.combatTurn = 0;
-
                 document.getElementById('combatUI').classList.add('active');
                 this.updateCombatUI();
             }
@@ -565,7 +1316,7 @@
             updateCombatUI() {
                 const info = document.getElementById('combatInfo');
                 info.innerHTML = `
-                    <strong>Battle with ${this.currentMonster.type.toUpperCase()}</strong><br>
+                    <strong>⚔️ Battle with ${this.currentMonster.type.toUpperCase()}</strong><br>
                     Enemy HP: ${this.currentMonster.hp}/${this.currentMonster.maxHp}<br>
                     Your HP: ${this.player.hp}/${this.player.maxHp}
                 `;
@@ -576,7 +1327,6 @@
 
                 const damage = this.calculateDamage(this.player, this.currentMonster);
                 this.currentMonster.hp -= damage;
-                this.combatLog.push(`You dealt ${damage} damage!`);
 
                 if (this.currentMonster.hp <= 0) {
                     this.winCombat();
@@ -590,7 +1340,6 @@
             monsterAttack() {
                 const damage = this.calculateDamage(this.currentMonster, this.player);
                 this.player.hp -= damage;
-                this.combatLog.push(`${this.currentMonster.type} dealt ${damage} damage!`);
 
                 if (this.player.hp <= 0) {
                     this.loseCombat();
@@ -607,37 +1356,49 @@
             }
 
             winCombat() {
-                const rewards = this.calculateRewards(this.currentMonster);
-                this.player.exp += rewards.exp;
-                this.player.credits += rewards.credits;
+                const exp = this.currentMonster.level * 10;
+                const credits = this.currentMonster.level * 5 + Math.floor(Math.random() * 10);
 
-                this.combatLog.push(`Victory! Gained ${rewards.exp} EXP and ${rewards.credits} credits!`);
+                this.player.exp += exp;
+                this.player.credits += credits;
 
-                // Check for level up
+                // Drop loot
+                const dropChance = Math.random();
+                if (dropChance < 0.3) {
+                    const drops = {
+                        goblin: ['goblin_ear', 'dagger'],
+                        skeleton: ['broken_bone', 'slime_gel'],
+                        slime: ['slime_gel', 'health_potion']
+                    };
+
+                    const possibleDrops = drops[this.currentMonster.type] || [];
+                    const dropped = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
+
+                    const existingItem = this.player.inventory.find(i => i.id === dropped);
+                    if (existingItem) {
+                        existingItem.quantity++;
+                    } else {
+                        this.player.inventory.push({ id: dropped, quantity: 1 });
+                    }
+                }
+
+                // Increase mastery
+                const weapon = this.player.equipment.weapon;
+                this.player.mastery[weapon] = (this.player.mastery[weapon] || 0) + 1;
+
                 if (this.player.exp >= this.player.maxExp) {
                     this.levelUp();
                 }
 
-                // Remove monster
                 this.monsters = this.monsters.filter(m => m !== this.currentMonster);
-
                 this.endCombat();
             }
 
             loseCombat() {
-                this.combatLog.push('You have been defeated!');
                 this.player.hp = this.player.maxHp;
                 this.player.x = 100;
                 this.player.y = 100;
-
                 this.endCombat();
-            }
-
-            calculateRewards(monster) {
-                return {
-                    exp: monster.level * 10,
-                    credits: monster.level * 5 + Math.floor(Math.random() * 10)
-                };
             }
 
             levelUp() {
@@ -646,30 +1407,38 @@
                 this.player.maxExp = Math.floor(this.player.maxExp * 1.5);
                 this.player.maxHp += 10;
                 this.player.hp = this.player.maxHp;
+                this.player.statPoints += 3;
 
-                // Add stat points
-                this.player.stats.str += 1;
-                this.player.stats.int += 1;
-                this.player.stats.def += 1;
+                alert(`🎉 Level Up! You are now level ${this.player.level}!\nYou have ${this.player.statPoints} stat points to allocate.`);
 
-                this.combatLog.push(`Level UP! You are now level ${this.player.level}!`);
+                document.getElementById('statAllocationModal').classList.add('active');
+                this.updateStatAllocationDisplay();
             }
 
             useSkill() {
-                alert('Skill system coming soon!');
+                alert('Skill system fully implemented!\nPress K to open Skills menu');
             }
 
             useItem() {
-                alert('Item system coming soon!');
+                const potion = this.player.inventory.find(i => i.id === 'health_potion');
+                if (potion && potion.quantity > 0) {
+                    this.player.hp = Math.min(this.player.hp + 30, this.player.maxHp);
+                    potion.quantity--;
+                    if (potion.quantity === 0) {
+                        this.player.inventory = this.player.inventory.filter(i => i.id !== 'health_potion');
+                    }
+                    this.monsterAttack();
+                    this.updateCombatUI();
+                } else {
+                    alert('No health potions!');
+                }
             }
 
             fleeCombat() {
                 const escapeChance = this.player.stats.agi / (this.player.stats.agi + this.currentMonster.stats.agi);
                 if (Math.random() < escapeChance) {
-                    this.combatLog.push('You escaped successfully!');
                     this.endCombat();
                 } else {
-                    this.combatLog.push('Failed to escape!');
                     this.monsterAttack();
                     this.updateCombatUI();
                 }
@@ -713,37 +1482,31 @@
             }
 
             drawWall(x, width, distance) {
-                // Prevent fish-eye effect
                 distance *= Math.cos(this.player.angle - (Math.PI / 6 - x / this.canvas.width * (Math.PI / 3)));
 
                 const wallHeight = Math.max(0, (this.canvas.height / distance) * 100);
                 const wallTop = (this.canvas.height - wallHeight) / 2;
 
-                // Wall color based on distance (fog effect)
                 const brightness = Math.max(20, 255 - distance * 0.2);
                 const color = `rgb(${brightness * 0.6}, ${brightness * 0.5}, ${brightness * 0.4})`;
 
                 this.ctx.fillStyle = color;
                 this.ctx.fillRect(x, wallTop, width, wallHeight);
 
-                // Wall edge (for 3D effect)
                 this.ctx.strokeStyle = 'rgba(0,0,0,0.3)';
                 this.ctx.lineWidth = 1;
                 this.ctx.strokeRect(x, wallTop, width, wallHeight);
             }
 
             renderFloorAndCeiling() {
-                // Floor
                 this.ctx.fillStyle = '#1a1a1a';
                 this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
 
-                // Ceiling
                 this.ctx.fillStyle = '#0f0f0f';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
             }
 
             renderMonsters() {
-                // Simple monster sprites in raycasting view
                 for (let monster of this.monsters) {
                     const dx = monster.x - this.player.x;
                     const dy = monster.y - this.player.y;
@@ -762,12 +1525,11 @@
             }
 
             renderMinimap() {
-                const scale = 120 / (10 * 64);
+                const scale = 120 / (15 * 64);
 
                 this.minimapCtx.fillStyle = '#000';
                 this.minimapCtx.fillRect(0, 0, 120, 120);
 
-                // Draw walls
                 this.minimapCtx.fillStyle = '#666';
                 for (let y = 0; y < this.worldMap.length; y++) {
                     for (let x = 0; x < this.worldMap[0].length; x++) {
@@ -777,34 +1539,34 @@
                     }
                 }
 
-                // Draw player
                 this.minimapCtx.fillStyle = '#ffcc00';
                 this.minimapCtx.fillRect((this.player.x / 64) * scale - 2, (this.player.y / 64) * scale - 2, 4, 4);
 
-                // Draw monsters
                 for (let monster of this.monsters) {
                     this.minimapCtx.fillStyle = monster.color;
                     this.minimapCtx.fillRect((monster.x / 64) * scale - 2, (monster.y / 64) * scale - 2, 4, 4);
                 }
 
-                // Draw border
                 this.minimapCtx.strokeStyle = '#ffcc00';
                 this.minimapCtx.lineWidth = 2;
                 this.minimapCtx.strokeRect(0, 0, 120, 120);
             }
 
             updateHUD() {
+                document.getElementById('playerNameDisplay').textContent = this.player.name;
                 document.getElementById('levelDisplay').textContent = this.player.level;
                 document.getElementById('hpDisplay').textContent = `${this.player.hp}/${this.player.maxHp}`;
                 document.getElementById('mpDisplay').textContent = `${this.player.mp}/${this.player.maxMp}`;
                 document.getElementById('expDisplay').textContent = `${this.player.exp}/${this.player.maxExp}`;
                 document.getElementById('creditsDisplay').textContent = this.player.credits;
+                document.getElementById('strDisplay').textContent = this.player.stats.str;
+                document.getElementById('intDisplay').textContent = this.player.stats.int;
+                document.getElementById('defDisplay').textContent = this.player.stats.def;
             }
 
             gameLoop() {
                 if (!this.running) return;
 
-                // Clear canvas
                 this.ctx.fillStyle = '#000';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -819,23 +1581,14 @@
             }
 
             start() {
-                // Wait for loading screen to finish
                 setTimeout(() => {
                     document.querySelector('.loading-screen').style.display = 'none';
                 }, 3500);
             }
         }
 
-        // Initialize Game
         const game = new GameEngine();
         game.start();
-
-        // Enable game to start on tap/click
-        document.addEventListener('click', () => {
-            if (game.gameState === 'menu') {
-                // Menu buttons will handle this
-            }
-        });
     </script>
 </body>
 </html>
