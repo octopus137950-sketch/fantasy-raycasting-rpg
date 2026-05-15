@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Raycasting RPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100vh;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+        }
+
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeOut 2s ease-in forwards 3s;
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .parchment {
+            position: relative;
+            width: 80%;
+            max-width: 400px;
+            padding: 40px;
+            background: linear-gradient(135deg, #8b7355 0%, #a0826d 100%);
+            border: 2px solid #654321;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            animation: unfold 2s ease-out;
+            transform-origin: center;
+        }
+
+        @keyframes unfold {
+            0% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scaleY(0.5);
+            }
+            100% {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: glow 2s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,204,0,0.5); }
+            50% { text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,204,0,0.8); }
+        }
+
+        .tap-to-begin {
+            text-align: center;
+            font-size: 1.2em;
+            color: #fff;
+            animation: pulse 1s ease-in-out infinite;
+            margin-top: 30px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Dust & Smoke Effects */
+        .dust {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* UI Overlay */
+        #uiLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border: 2px solid #ffcc00;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #ffcc00;
+            z-index: 200;
+        }
+
+        .stat-row {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            min-width: 150px;
+        }
+
+        .minimap {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 120px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffcc00;
+            border-radius: 5px;
+            z-index: 200;
+        }
+
+        .combat-ui {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ff6600;
+            border-radius: 5px;
+            padding: 15px;
+            z-index: 200;
+            display: none;
+        }
+
+        .combat-ui.active {
+            display: block;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            padding: 10px;
+            background: #444;
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+            pointer-events: auto;
+        }
+
+        .action-btn:hover {
+            background: #ffcc00;
+            color: #000;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            display: none;
+            z-index: 500;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-screen.active {
+            display: flex;
+        }
+
+        .menu-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ffcc00;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .menu-title {
+            font-size: 2em;
+            color: #ffcc00;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #333;
+            border: 2px solid #ffcc00;
+            color: #ffcc00;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .menu-btn:hover {
+            background: #ffcc00;
+            color: #000;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- Loading Screen -->
+        <div class="loading-screen">
+            <div class="parchment">
+                <div class="logo">⚔️ FANTASY RAYCASTING RPG ⚔️</div>
+                <div class="tap-to-begin">Tap to Begin</div>
+            </div>
+        </div>
+
+        <!-- Game Canvas -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- UI Layer -->
+        <div id="uiLayer">
+            <!-- HUD -->
+            <div class="hud" id="hud">
+                <div class="stat-row">
+                    <span>Level:</span>
+                    <span id="levelDisplay">1</span>
+                </div>
+                <div class="stat-row">
+                    <span>HP:</span>
+                    <span id="hpDisplay">100/100</span>
+                </div>
+                <div class="stat-row">
+                    <span>MP:</span>
+                    <span id="mpDisplay">50/50</span>
+                </div>
+                <div class="stat-row">
+                    <span>EXP:</span>
+                    <span id="expDisplay">0/100</span>
+                </div>
+                <div class="stat-row">
+                    <span>Credits:</span>
+                    <span id="creditsDisplay">0</span>
+                </div>
+            </div>
+
+            <!-- Minimap -->
+            <canvas id="minimap" class="minimap"></canvas>
+
+            <!-- Combat UI -->
+            <div class="combat-ui" id="combatUI">
+                <div id="combatInfo"></div>
+                <div class="action-buttons">
+                    <button class="action-btn" id="attackBtn">Attack</button>
+                    <button class="action-btn" id="skillBtn">Skill</button>
+                    <button class="action-btn" id="itemBtn">Item</button>
+                    <button class="action-btn" id="fleeBtn">Flee</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Screen -->
+        <div class="menu-screen active" id="menuScreen">
+            <div class="menu-content">
+                <div class="menu-title">⚔️ Fantasy RPG ⚔️</div>
+                <button class="menu-btn" id="continueBtn">Continue</button>
+                <button class="menu-btn" id="newGameBtn">New Game</button>
+                <button class="menu-btn" id="settingsBtn">Settings</button>
+                <button class="menu-btn" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // GAME ENGINE - Fantasy Raycasting RPG
+        // ============================================
+
+        class GameEngine {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.minimapCanvas = document.getElementById('minimap');
+                this.minimapCtx = this.minimapCanvas.getContext('2d');
+
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.minimapCanvas.width = 120;
+                this.minimapCanvas.height = 120;
+
+                this.gameState = 'menu'; // menu, exploration, combat
+                this.running = false;
+
+                this.initPlayer();
+                this.initWorld();
+                this.initEventListeners();
+                this.setupMenu();
+            }
+
+            initPlayer() {
+                this.player = {
+                    x: 100,
+                    y: 100,
+                    angle: 0,
+                    speed: 3,
+                    rotSpeed: 0.08,
+
+                    level: 1,
+                    exp: 0,
+                    maxExp: 100,
+                    credits: 0,
+
+                    hp: 100,
+                    maxHp: 100,
+                    mp: 50,
+                    maxMp: 50,
+
+                    stats: {
+                        str: 5,
+                        int: 5,
+                        def: 5,
+                        agi: 5,
+                        crt: 5
+                    },
+
+                    weapon: 'sword',
+                    armor: 'leather',
+                    inventory: []
+                };
+            }
+
+            initWorld() {
+                // Simple world map with walls
+                this.worldMap = [
+                    [1,1,1,1,1,1,1,1,1,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,0,1],
+                    [1,0,0,1,1,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,1,0,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,0,0,0,0,0,0,0,0,1],
+                    [1,1,1,1,1,1,1,1,1,1]
+                ];
+
+                this.tileSize = 64;
+                this.monsters = [];
+                this.items = [];
+
+                this.spawnInitialMonsters();
+            }
+
+            spawnInitialMonsters() {
+                const monsterTypes = ['goblin', 'skeleton', 'slime'];
+                for (let i = 0; i < 5; i++) {
+                    const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+                    const x = Math.random() * 600 + 100;
+                    const y = Math.random() * 600 + 100;
+
+                    if (this.isWalkable(x, y)) {
+                        this.monsters.push(this.createMonster(type, x, y));
+                    }
+                }
+            }
+
+            createMonster(type, x, y) {
+                const stats = {
+                    goblin: { str: 3, int: 2, def: 2, agi: 4, crt: 2, hp: 20 },
+                    skeleton: { str: 4, int: 3, def: 3, agi: 3, crt: 3, hp: 25 },
+                    slime: { str: 2, int: 2, def: 1, agi: 2, crt: 1, hp: 15 }
+                };
+
+                const monsterStats = stats[type] || stats.goblin;
+                return {
+                    type,
+                    x,
+                    y,
+                    hp: monsterStats.hp,
+                    maxHp: monsterStats.hp,
+                    stats: monsterStats,
+                    level: this.player.level,
+                    color: type === 'goblin' ? '#00ff00' : type === 'skeleton' ? '#888888' : '#0088ff'
+                };
+            }
+
+            isWalkable(x, y) {
+                const tileX = Math.floor(x / this.tileSize);
+                const tileY = Math.floor(y / this.tileSize);
+
+                if (tileX < 0 || tileX >= this.worldMap[0].length ||
+                    tileY < 0 || tileY >= this.worldMap.length) {
+                    return false;
+                }
+
+                return this.worldMap[tileY][tileX] === 0;
+            }
+
+            initEventListeners() {
+                window.addEventListener('resize', () => this.onResize());
+                window.addEventListener('keydown', (e) => this.handleInput(e));
+                window.addEventListener('keyup', (e) => this.handleInputRelease(e));
+
+                document.getElementById('newGameBtn').addEventListener('click', () => this.startNewGame());
+                document.getElementById('continueBtn').addEventListener('click', () => this.continueGame());
+                document.getElementById('settingsBtn').addEventListener('click', () => this.openSettings());
+                document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
+
+                // Combat buttons
+                document.getElementById('attackBtn').addEventListener('click', () => this.playerAttack());
+                document.getElementById('skillBtn').addEventListener('click', () => this.useSkill());
+                document.getElementById('itemBtn').addEventListener('click', () => this.useItem());
+                document.getElementById('fleeBtn').addEventListener('click', () => this.fleeCombat());
+            }
+
+            setupMenu() {
+                document.getElementById('menuScreen').classList.add('active');
+            }
+
+            startNewGame() {
+                this.gameState = 'exploration';
+                document.getElementById('menuScreen').classList.remove('active');
+                this.running = true;
+                this.gameLoop();
+            }
+
+            continueGame() {
+                this.startNewGame();
+            }
+
+            openSettings() {
+                alert('Settings Panel - Coming Soon!');
+            }
+
+            logout() {
+                this.running = false;
+                this.gameState = 'menu';
+                document.getElementById('menuScreen').classList.add('active');
+            }
+
+            onResize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            handleInput(e) {
+                const key = e.key.toLowerCase();
+                if (key === 'w' || key === 'arrowup') this.player.moveForward = true;
+                if (key === 's' || key === 'arrowdown') this.player.moveBackward = true;
+                if (key === 'a' || key === 'arrowleft') this.player.turnLeft = true;
+                if (key === 'd' || key === 'arrowright') this.player.turnRight = true;
+            }
+
+            handleInputRelease(e) {
+                const key = e.key.toLowerCase();
+                if (key === 'w' || key === 'arrowup') this.player.moveForward = false;
+                if (key === 's' || key === 'arrowdown') this.player.moveBackward = false;
+                if (key === 'a' || key === 'arrowleft') this.player.turnLeft = false;
+                if (key === 'd' || key === 'arrowright') this.player.turnRight = false;
+            }
+
+            updatePlayer() {
+                if (this.player.turnLeft) this.player.angle -= this.player.rotSpeed;
+                if (this.player.turnRight) this.player.angle += this.player.rotSpeed;
+
+                let newX = this.player.x;
+                let newY = this.player.y;
+
+                if (this.player.moveForward) {
+                    newX += Math.cos(this.player.angle) * this.player.speed;
+                    newY += Math.sin(this.player.angle) * this.player.speed;
+                }
+                if (this.player.moveBackward) {
+                    newX -= Math.cos(this.player.angle) * this.player.speed;
+                    newY -= Math.sin(this.player.angle) * this.player.speed;
+                }
+
+                if (this.isWalkable(newX, newY)) {
+                    this.player.x = newX;
+                    this.player.y = newY;
+                }
+
+                // Check collision with monsters
+                this.checkMonsterCollision();
+            }
+
+            checkMonsterCollision() {
+                for (let monster of this.monsters) {
+                    const dx = this.player.x - monster.x;
+                    const dy = this.player.y - monster.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 40) {
+                        this.startCombat(monster);
+                    }
+                }
+            }
+
+            startCombat(monster) {
+                this.gameState = 'combat';
+                this.currentMonster = monster;
+                this.combatLog = [];
+                this.combatTurn = 0;
+
+                document.getElementById('combatUI').classList.add('active');
+                this.updateCombatUI();
+            }
+
+            updateCombatUI() {
+                const info = document.getElementById('combatInfo');
+                info.innerHTML = `
+                    <strong>Battle with ${this.currentMonster.type.toUpperCase()}</strong><br>
+                    Enemy HP: ${this.currentMonster.hp}/${this.currentMonster.maxHp}<br>
+                    Your HP: ${this.player.hp}/${this.player.maxHp}
+                `;
+            }
+
+            playerAttack() {
+                if (this.gameState !== 'combat') return;
+
+                const damage = this.calculateDamage(this.player, this.currentMonster);
+                this.currentMonster.hp -= damage;
+                this.combatLog.push(`You dealt ${damage} damage!`);
+
+                if (this.currentMonster.hp <= 0) {
+                    this.winCombat();
+                } else {
+                    this.monsterAttack();
+                }
+
+                this.updateCombatUI();
+            }
+
+            monsterAttack() {
+                const damage = this.calculateDamage(this.currentMonster, this.player);
+                this.player.hp -= damage;
+                this.combatLog.push(`${this.currentMonster.type} dealt ${damage} damage!`);
+
+                if (this.player.hp <= 0) {
+                    this.loseCombat();
+                }
+            }
+
+            calculateDamage(attacker, defender) {
+                const baseDamage = attacker.stats.str * 2;
+                const variance = Math.random() * 10 - 5;
+                const defense = defender.stats.def;
+                const finalDamage = Math.max(1, baseDamage + variance - defense / 2);
+
+                return Math.floor(finalDamage);
+            }
+
+            winCombat() {
+                const rewards = this.calculateRewards(this.currentMonster);
+                this.player.exp += rewards.exp;
+                this.player.credits += rewards.credits;
+
+                this.combatLog.push(`Victory! Gained ${rewards.exp} EXP and ${rewards.credits} credits!`);
+
+                // Check for level up
+                if (this.player.exp >= this.player.maxExp) {
+                    this.levelUp();
+                }
+
+                // Remove monster
+                this.monsters = this.monsters.filter(m => m !== this.currentMonster);
+
+                this.endCombat();
+            }
+
+            loseCombat() {
+                this.combatLog.push('You have been defeated!');
+                this.player.hp = this.player.maxHp;
+                this.player.x = 100;
+                this.player.y = 100;
+
+                this.endCombat();
+            }
+
+            calculateRewards(monster) {
+                return {
+                    exp: monster.level * 10,
+                    credits: monster.level * 5 + Math.floor(Math.random() * 10)
+                };
+            }
+
+            levelUp() {
+                this.player.level++;
+                this.player.exp = 0;
+                this.player.maxExp = Math.floor(this.player.maxExp * 1.5);
+                this.player.maxHp += 10;
+                this.player.hp = this.player.maxHp;
+
+                // Add stat points
+                this.player.stats.str += 1;
+                this.player.stats.int += 1;
+                this.player.stats.def += 1;
+
+                this.combatLog.push(`Level UP! You are now level ${this.player.level}!`);
+            }
+
+            useSkill() {
+                alert('Skill system coming soon!');
+            }
+
+            useItem() {
+                alert('Item system coming soon!');
+            }
+
+            fleeCombat() {
+                const escapeChance = this.player.stats.agi / (this.player.stats.agi + this.currentMonster.stats.agi);
+                if (Math.random() < escapeChance) {
+                    this.combatLog.push('You escaped successfully!');
+                    this.endCombat();
+                } else {
+                    this.combatLog.push('Failed to escape!');
+                    this.monsterAttack();
+                    this.updateCombatUI();
+                }
+            }
+
+            endCombat() {
+                this.gameState = 'exploration';
+                document.getElementById('combatUI').classList.remove('active');
+                this.currentMonster = null;
+            }
+
+            renderRaycasting() {
+                const rayCount = Math.min(this.canvas.width, 320);
+                const raySpacing = this.canvas.width / rayCount;
+
+                for (let i = 0; i < rayCount; i++) {
+                    const rayAngle = this.player.angle - (Math.PI / 6) + (i / rayCount) * (Math.PI / 3);
+                    const distance = this.castRay(rayAngle);
+                    this.drawWall(i * raySpacing, raySpacing, distance);
+                }
+
+                this.renderFloorAndCeiling();
+                this.renderMonsters();
+            }
+
+            castRay(angle) {
+                let distance = 0;
+                let maxDistance = 1000;
+                let step = 5;
+
+                for (distance = 0; distance < maxDistance; distance += step) {
+                    const x = this.player.x + Math.cos(angle) * distance;
+                    const y = this.player.y + Math.sin(angle) * distance;
+
+                    if (!this.isWalkable(x, y)) {
+                        return distance;
+                    }
+                }
+
+                return maxDistance;
+            }
+
+            drawWall(x, width, distance) {
+                // Prevent fish-eye effect
+                distance *= Math.cos(this.player.angle - (Math.PI / 6 - x / this.canvas.width * (Math.PI / 3)));
+
+                const wallHeight = Math.max(0, (this.canvas.height / distance) * 100);
+                const wallTop = (this.canvas.height - wallHeight) / 2;
+
+                // Wall color based on distance (fog effect)
+                const brightness = Math.max(20, 255 - distance * 0.2);
+                const color = `rgb(${brightness * 0.6}, ${brightness * 0.5}, ${brightness * 0.4})`;
+
+                this.ctx.fillStyle = color;
+                this.ctx.fillRect(x, wallTop, width, wallHeight);
+
+                // Wall edge (for 3D effect)
+                this.ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(x, wallTop, width, wallHeight);
+            }
+
+            renderFloorAndCeiling() {
+                // Floor
+                this.ctx.fillStyle = '#1a1a1a';
+                this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
+
+                // Ceiling
+                this.ctx.fillStyle = '#0f0f0f';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
+            }
+
+            renderMonsters() {
+                // Simple monster sprites in raycasting view
+                for (let monster of this.monsters) {
+                    const dx = monster.x - this.player.x;
+                    const dy = monster.y - this.player.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 500) {
+                        const angle = Math.atan2(dy, dx) - this.player.angle;
+                        const screenX = this.canvas.width / 2 + Math.sin(angle) * (this.canvas.width / 3);
+                        const screenY = this.canvas.height / 2 - (distance / 500) * (this.canvas.height / 3);
+                        const size = Math.max(5, 50 / (distance / 100));
+
+                        this.ctx.fillStyle = monster.color;
+                        this.ctx.fillRect(screenX - size / 2, screenY - size / 2, size, size);
+                    }
+                }
+            }
+
+            renderMinimap() {
+                const scale = 120 / (10 * 64);
+
+                this.minimapCtx.fillStyle = '#000';
+                this.minimapCtx.fillRect(0, 0, 120, 120);
+
+                // Draw walls
+                this.minimapCtx.fillStyle = '#666';
+                for (let y = 0; y < this.worldMap.length; y++) {
+                    for (let x = 0; x < this.worldMap[0].length; x++) {
+                        if (this.worldMap[y][x] === 1) {
+                            this.minimapCtx.fillRect(x * scale, y * scale, scale, scale);
+                        }
+                    }
+                }
+
+                // Draw player
+                this.minimapCtx.fillStyle = '#ffcc00';
+                this.minimapCtx.fillRect((this.player.x / 64) * scale - 2, (this.player.y / 64) * scale - 2, 4, 4);
+
+                // Draw monsters
+                for (let monster of this.monsters) {
+                    this.minimapCtx.fillStyle = monster.color;
+                    this.minimapCtx.fillRect((monster.x / 64) * scale - 2, (monster.y / 64) * scale - 2, 4, 4);
+                }
+
+                // Draw border
+                this.minimapCtx.strokeStyle = '#ffcc00';
+                this.minimapCtx.lineWidth = 2;
+                this.minimapCtx.strokeRect(0, 0, 120, 120);
+            }
+
+            updateHUD() {
+                document.getElementById('levelDisplay').textContent = this.player.level;
+                document.getElementById('hpDisplay').textContent = `${this.player.hp}/${this.player.maxHp}`;
+                document.getElementById('mpDisplay').textContent = `${this.player.mp}/${this.player.maxMp}`;
+                document.getElementById('expDisplay').textContent = `${this.player.exp}/${this.player.maxExp}`;
+                document.getElementById('creditsDisplay').textContent = this.player.credits;
+            }
+
+            gameLoop() {
+                if (!this.running) return;
+
+                // Clear canvas
+                this.ctx.fillStyle = '#000';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.gameState === 'exploration') {
+                    this.updatePlayer();
+                    this.renderRaycasting();
+                    this.renderMinimap();
+                    this.updateHUD();
+                }
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            start() {
+                // Wait for loading screen to finish
+                setTimeout(() => {
+                    document.querySelector('.loading-screen').style.display = 'none';
+                }, 3500);
+            }
+        }
+
+        // Initialize Game
+        const game = new GameEngine();
+        game.start();
+
+        // Enable game to start on tap/click
+        document.addEventListener('click', () => {
+            if (game.gameState === 'menu') {
+                // Menu buttons will handle this
+            }
+        });
+    </script>
+</body>
+</html>
