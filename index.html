@@ -2,1617 +2,800 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fantasy Raycasting RPG</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monster Tactics: Infinite Legacy v5.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
+        :root {
+            --bg-dark: #0f0f1a;
+            --bg-panel: #1a1a24;
+            --bg-card: #22222d;
+            --accent-gold: #ffcc00;
+            --accent-red: #ff4d4d;
+            --accent-blue: #00aaff;
+            --accent-green: #1db954;
+            --accent-purple: #9d4edd;
         }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            font-family: 'Arial', sans-serif;
-            background: #0a0a0a;
-            color: #fff;
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        body {
+            background: radial-gradient(circle at center, #1a1a2e 0%, #05050a 100%);
+            color: #fff; font-family: 'Kanit', sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden;
+        }
+        #game-container {
+            position: relative; width: 100%; max-width: 450px; height: 100vh; max-height: 850px;
+            background: linear-gradient(180deg, #1e1e2a 0%, #15151c 100%);
+            box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; border-radius: 12px; overflow: hidden;
+        }
+        #top-ui {
+            height: 65px; background: rgba(10, 10, 15, 0.72);
+            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+            backdrop-filter: blur(10px);
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 0 15px;
+            font-weight: 600; font-size: 14px;
+            border-bottom: 3px solid #000;
+            box-shadow: 0 2px 0 rgba(255,255,255,0.06);
+            z-index: 10;
+        }
+        .stats-left { display: flex; flex-direction: column; gap: 4px; text-shadow: 0 2px 0 #000; }
+        #gold-text { color: var(--accent-gold); display: flex; align-items: center; gap: 5px; letter-spacing: 0.5px; }
+        #pity-text { color: #d9aaff; font-size: 11px; font-weight: 400; }
+        #wave-text {
+            color: #fff; font-size: 17px; font-weight: 800; letter-spacing: 1px;
+            background: linear-gradient(135deg, var(--accent-red), #ff8855);
+            padding: 6px 14px; border: 2px solid #000;
+            clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+            box-shadow: inset -2px -2px 0 rgba(0,0,0,0.35), inset 2px 2px 0 rgba(255,255,255,0.25), 0 4px 10px rgba(255,77,77,0.3);
+        }
+        #canvas-wrapper {
+            flex-grow: 1; position: relative; display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle at center, #1a1a24 0%, #0a0a0e 100%);
             overflow: hidden;
-            position: fixed;
         }
-
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
+        canvas { max-width: 100%; max-height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+        #bottom-ui {
+            background: rgba(10, 10, 15, 0.85);
+            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 3px);
+            backdrop-filter: blur(10px);
+            padding: 12px; border-top: 3px solid #000;
+            display: flex; flex-direction: column; gap: 8px;
         }
-
-        #gameContainer {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: #000;
+        #log-box {
+            background: #0a0a0a; color: #ffcc00; padding: 8px;
+            font-size: 12px; height: 45px; overflow-y: hidden; text-align: center;
+            display: flex; align-items: center; justify-content: center; font-weight: 400; line-height: 1.4;
+            border: 2px solid #000;
+            box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5), inset -2px -2px 0 rgba(255,204,0,0.08), 0 0 0 1px rgba(255,204,0,0.15);
         }
-
-        .loading-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a0a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            animation: fadeOut 2s ease-in forwards 3s;
+        #sell-zone {
+            background: rgba(74, 34, 34, 0.4); border: 2px dashed #ff4d4d; color: #ff8888; text-align: center;
+            padding: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s;
         }
-
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
+        #sell-zone:active { background: rgba(255, 77, 77, 0.4); }
+        #controls { display: flex; gap: 8px; }
+        button {
+            flex: 1; padding: 14px 0; border: 2px solid #000;
+            font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.1s;
+            font-family: 'Kanit', sans-serif;
+            box-shadow: inset -3px -3px 0 rgba(0,0,0,0.35), inset 3px 3px 0 rgba(255,255,255,0.25), 0 4px 0 rgba(0,0,0,0.5);
         }
-
-        .parchment {
-            position: relative;
-            width: 85%;
-            max-width: 350px;
-            padding: 30px;
-            background: linear-gradient(135deg, #8b7355 0%, #a0826d 100%);
-            border: 2px solid #654321;
-            border-radius: 5px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            animation: unfold 2s ease-out;
-            transform-origin: center;
+        button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        button:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 3px 3px 0 rgba(0,0,0,0.35), inset -3px -3px 0 rgba(255,255,255,0.1); }
+        #btn-menu { background: linear-gradient(135deg, #444, #333); color: #fff; flex: 0.3; }
+        #btn-buy { background: linear-gradient(135deg, var(--accent-green), #14803a); color: #fff; }
+        #btn-start { background: linear-gradient(135deg, var(--accent-red), #b53030); color: #fff; }
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 10, 0.95); backdrop-filter: blur(15px);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100; padding: 20px;
         }
-
-        @keyframes unfold {
-            0% { transform: scaleY(0); opacity: 0; }
-            50% { transform: scaleY(0.5); }
-            100% { transform: scaleY(1); opacity: 1; }
-        }
-
-        .logo {
-            text-align: center;
-            font-size: 2em;
-            font-weight: bold;
-            color: #ffcc00;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            animation: glow 2s ease-in-out infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes glow {
-            0%, 100% { text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,204,0,0.5); }
-            50% { text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(255,204,0,0.8); }
-        }
-
-        .tap-to-begin {
-            text-align: center;
-            font-size: 1em;
-            color: #fff;
-            animation: pulse 1s ease-in-out infinite;
-            margin-top: 20px;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-
-        #uiLayer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        .hud {
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 8px;
-            border: 2px solid #ffcc00;
-            border-radius: 3px;
-            font-size: 11px;
-            color: #ffcc00;
-            z-index: 200;
-            max-width: 150px;
-        }
-
-        .stat-row {
-            margin: 2px 0;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .minimap {
-            position: absolute;
-            bottom: 90px;
-            right: 5px;
-            width: 100px;
-            height: 100px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 2px solid #ffcc00;
-            border-radius: 3px;
-            z-index: 200;
-        }
-
-        .combat-ui {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            border-top: 2px solid #ff6600;
-            padding: 8px;
-            z-index: 200;
-            display: none;
-            max-height: 40vh;
-            overflow-y: auto;
-        }
-
-        .combat-ui.active {
-            display: block;
-        }
-
-        #combatInfo {
-            font-size: 12px;
-            color: #ffcc00;
-            margin-bottom: 8px;
-            padding: 5px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 3px;
-        }
-
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-        }
-
-        .action-btn {
-            padding: 10px 5px;
-            background: #444;
-            border: 1px solid #ffcc00;
-            color: #ffcc00;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: all 0.1s;
-            pointer-events: auto;
-            font-size: 12px;
-            font-weight: bold;
-            touch-action: manipulation;
-        }
-
-        .action-btn:active {
-            background: #ffcc00;
-            color: #000;
-            transform: scale(0.95);
-        }
-
-        .action-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        .movement-pad {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            width: 100px;
-            height: 100px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #ffcc00;
-            border-radius: 50%;
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-            touch-action: none;
-        }
-
-        .movement-pad-inner {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 204, 0, 0.2);
-            border: 1px solid #ffcc00;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .movement-stick {
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: #ffcc00;
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 201;
-        }
-
-        .quick-buttons {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            display: flex;
-            gap: 5px;
-            flex-direction: column;
-            pointer-events: auto;
-            z-index: 200;
-        }
-
-        .quick-btn {
-            width: 50px;
-            height: 50px;
-            background: #333;
-            border: 2px solid #ffcc00;
-            color: #ffcc00;
-            border-radius: 5px;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s;
-            font-weight: bold;
-            touch-action: manipulation;
-        }
-
-        .quick-btn:active {
-            background: #ffcc00;
-            color: #000;
-            transform: scale(0.95);
-        }
-
-        .menu-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 10, 0.98);
-            display: none;
-            z-index: 500;
-            justify-content: center;
-            align-items: center;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .menu-screen.active {
-            display: flex;
-        }
-
-        .menu-content {
-            background: rgba(0, 0, 0, 0.95);
-            border: 3px solid #ffcc00;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            width: 100%;
-            max-width: 100%;
-        }
-
+        .hidden { display: none !important; }
         .menu-title {
-            font-size: 1.5em;
-            color: #ffcc00;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 36px; color: #fff; margin-bottom: 10px; text-align: center; font-weight: 800;
+            background: linear-gradient(90deg, #ffcc00, #ff33aa, #00aaff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
         }
-
+        .menu-sub { font-size: 14px; color: #aaa; margin-bottom: 30px; letter-spacing: 4px; }
         .menu-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: #333;
-            border: 2px solid #ffcc00;
-            color: #ffcc00;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.2s;
-            pointer-events: auto;
-            font-weight: bold;
-            touch-action: manipulation;
+            width: 85%; padding: 15px; margin: 8px 0; font-size: 16px;
+            background: rgba(255,255,255,0.05); color: #fff; border: 2px solid rgba(255,255,255,0.15); font-weight: 600;
+            backdrop-filter: blur(5px); transition: 0.15s;
+            box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25), inset 2px 2px 0 rgba(255,255,255,0.08);
         }
-
-        .menu-btn:active {
-            background: #ffcc00;
-            color: #000;
-            transform: scale(0.98);
+        .menu-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.35); }
+        .menu-btn:active { transform: translateY(2px); }
+        #btn-continue { background: linear-gradient(135deg, var(--accent-blue), #0056b3); border-color: #000; }
+        #guide-content {
+            width: 100%; max-height: 70%; overflow-y: auto; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px; margin-bottom: 15px;
         }
-
-        .form-group {
-            margin: 12px 0;
-            text-align: left;
+        #guide-content::-webkit-scrollbar { width: 4px; }
+        #guide-content::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        .recipe-row {
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05); padding: 10px 5px; font-size: 13px;
         }
-
-        .form-group label {
-            display: block;
-            color: #ffcc00;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            background: #222;
-            border: 1px solid #666;
-            color: #fff;
-            border-radius: 3px;
-            font-size: 13px;
-        }
-
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #ffcc00;
-            box-shadow: 0 0 5px rgba(255,204,0,0.5);
-        }
-
-        .character-preview {
-            background: #111;
-            border: 2px solid #666;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: center;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3em;
-        }
-
-        .modal {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            z-index: 600;
-            justify-content: center;
-            align-items: flex-start;
-            overflow-y: auto;
-            padding: 10px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: rgba(0, 0, 0, 0.98);
-            border: 2px solid #ff6600;
-            padding: 15px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 100%;
-            margin-top: 10px;
-        }
-
-        .modal-title {
-            font-size: 1.3em;
-            color: #ff6600;
-            margin-bottom: 12px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-btn {
-            font-size: 1.5em;
-            color: #fff;
-            cursor: pointer;
-            pointer-events: auto;
-            background: none;
-            border: none;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            touch-action: manipulation;
-        }
-
-        .close-btn:active {
-            color: #ff6600;
-        }
-
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 5px;
-            margin: 10px 0;
-        }
-
-        .inventory-item {
-            background: #222;
-            border: 2px solid #666;
-            padding: 8px;
-            text-align: center;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 11px;
-            transition: all 0.2s;
-            pointer-events: auto;
-            touch-action: manipulation;
-        }
-
-        .inventory-item:active {
-            border-color: #ffcc00;
-            background: #333;
-        }
-
-        .inventory-item.rare {
-            border-color: #00ff00;
-        }
-
-        .inventory-item.epic {
-            border-color: #0088ff;
-        }
-
-        .inventory-item.legendary {
-            border-color: #ff6600;
-        }
-
-        .stat-allocation {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            margin: 10px 0;
-        }
-
-        .stat-box {
-            background: #222;
-            border: 1px solid #666;
-            padding: 8px;
-            text-align: center;
-            border-radius: 3px;
-        }
-
-        .stat-box label {
-            display: block;
-            color: #ffcc00;
-            font-size: 11px;
-            margin-bottom: 3px;
-        }
-
-        .stat-input {
-            width: 100%;
-            padding: 5px;
-            background: #111;
-            border: 1px solid #666;
-            color: #fff;
-            text-align: center;
-            border-radius: 2px;
-            font-size: 12px;
-        }
-
-        .stat-buttons {
-            display: flex;
-            gap: 3px;
-            margin-top: 3px;
-        }
-
-        .stat-btn {
-            flex: 1;
-            padding: 5px;
-            background: #444;
-            border: 1px solid #666;
-            color: #ffcc00;
-            cursor: pointer;
-            border-radius: 2px;
-            font-size: 12px;
-            pointer-events: auto;
-            font-weight: bold;
-            touch-action: manipulation;
-        }
-
-        .stat-btn:active {
-            background: #666;
-        }
-
-        .marketplace-item {
-            background: #222;
-            border: 1px solid #666;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 3px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .marketplace-item.selling {
-            border-color: #00ff00;
-        }
-
-        .skill-card {
-            background: #222;
-            border: 1px solid #666;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 3px;
-            pointer-events: auto;
-            font-size: 12px;
-        }
-
-        .skill-card.locked {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 12px;
-            background: #111;
-            border: 1px solid #666;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 3px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6600, #ffcc00);
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        .tab-buttons {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 8px 12px;
-            background: #333;
-            border: 1px solid #666;
-            color: #fff;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 11px;
-            pointer-events: auto;
-            transition: all 0.2s;
-            touch-action: manipulation;
-            flex: 1;
-            min-width: 70px;
-        }
-
-        .tab-btn.active {
-            background: #ffcc00;
-            color: #000;
-            border-color: #ffcc00;
-        }
-
-        .tab-btn:active {
-            transform: scale(0.95);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .item-details {
-            background: #111;
-            border: 1px solid #666;
-            padding: 10px;
-            border-radius: 3px;
-            margin: 10px 0;
-            font-size: 12px;
-            display: none;
-        }
-
-        .item-details.active {
-            display: block;
-        }
-
-        @media (max-width: 360px) {
-            .hud {
-                font-size: 10px;
-                padding: 6px;
-            }
-
-            .menu-title {
-                font-size: 1.2em;
-            }
-
-            .action-btn {
-                font-size: 11px;
-                padding: 8px 3px;
-            }
-        }
+        .recipe-unknown { color: #555; font-style: italic; }
+        .highlight { color: #33ffcc; font-weight: 600; text-shadow: 0 0 5px rgba(51,255,204,0.3); }
+        .tier-badge { font-size: 10px; background: #333; padding: 2px 5px; border-radius: 4px; margin-left: 5px; }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <!-- Loading Screen -->
-        <div class="loading-screen">
-            <div class="parchment">
-                <div class="logo">⚔️ FANTASY RPG ⚔️</div>
-                <div class="tap-to-begin">Tap to Begin</div>
-            </div>
+<div id="game-container">
+    <div id="main-menu" class="overlay">
+        <div class="menu-title">MONSTER TACTICS</div>
+        <div class="menu-sub">PIXEL LEGACY v5.0</div>
+        <button id="btn-continue" class="menu-btn hidden" onclick="continueGame()">⏯️ เล่นต่อ (Continue)</button>
+        <button class="menu-btn" onclick="startGame()">▶️ เริ่มเกมใหม่ (สืบทอดสูตรผสม)</button>
+        <button class="menu-btn" onclick="openGuide()">📖 สมุดคู่มือผสมมอนสเตอร์</button>
+    </div>
+    <div id="fusion-guide" class="overlay hidden">
+        <div class="menu-title" style="font-size:24px; margin-bottom: 20px;">สมุดคู่มือสูตรผสม</div>
+        <div id="guide-content"></div>
+        <button class="menu-btn" onclick="closeGuide()">❌ ปิดหน้าต่าง</button>
+    </div>
+    <div id="top-ui">
+        <div class="stats-left">
+            <div id="gold-text">🪙 ทอง: 15</div>
+            <div id="pity-text">🌟 การันตีสูตรใหม่ในอีก: 10 กล่อง</div>
         </div>
-
-        <!-- Game Canvas -->
+        <div id="wave-text">WAVE 1</div>
+    </div>
+    <div id="canvas-wrapper">
         <canvas id="gameCanvas"></canvas>
-
-        <!-- UI Layer -->
-        <div id="uiLayer">
-            <!-- HUD -->
-            <div class="hud" id="hud">
-                <div style="margin-bottom: 5px; border-bottom: 1px solid #666; padding-bottom: 5px;">
-                    <strong id="playerNameDisplay">Hero</strong>
-                </div>
-                <div class="stat-row">
-                    <span>Lv:</span>
-                    <span id="levelDisplay">1</span>
-                </div>
-                <div class="stat-row">
-                    <span>HP:</span>
-                    <span id="hpDisplay">100</span>
-                </div>
-                <div class="stat-row">
-                    <span>EXP:</span>
-                    <span id="expDisplay">0/100</span>
-                </div>
-                <div class="stat-row">
-                    <span>$:</span>
-                    <span id="creditsDisplay">0</span>
-                </div>
-            </div>
-
-            <!-- Minimap -->
-            <canvas id="minimap" class="minimap"></canvas>
-
-            <!-- Movement Pad -->
-            <div class="movement-pad" id="movementPad" style="display: none;">
-                <div class="movement-pad-inner">
-                    <div class="movement-stick" id="movementStick"></div>
-                </div>
-            </div>
-
-            <!-- Quick Action Buttons -->
-            <div class="quick-buttons">
-                <button class="quick-btn" id="inventoryBtn" title="Inventory">📦</button>
-                <button class="quick-btn" id="skillsBtn" title="Skills">⭐</button>
-                <button class="quick-btn" id="menuBtn" title="Menu">☰</button>
-            </div>
-
-            <!-- Combat UI -->
-            <div class="combat-ui" id="combatUI">
-                <div id="combatInfo"></div>
-                <div class="action-buttons">
-                    <button class="action-btn" id="attackBtn">⚔️ Attack</button>
-                    <button class="action-btn" id="itemBtn">💊 Item</button>
-                    <button class="action-btn" id="skillBtn">✨ Skill</button>
-                    <button class="action-btn" id="fleeBtn">🏃 Flee</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Menu Screen -->
-        <div class="menu-screen active" id="menuScreen">
-            <div class="menu-content">
-                <div class="menu-title">⚔️ FANTASY RPG ⚔️</div>
-                <button class="menu-btn" id="continueBtn">Continue</button>
-                <button class="menu-btn" id="newGameBtn">New Game</button>
-                <button class="menu-btn" id="logoutBtn">Logout</button>
-            </div>
-        </div>
-
-        <!-- Character Creation Screen -->
-        <div class="menu-screen" id="charCreationScreen">
-            <div class="menu-content" style="max-height: 90vh; overflow-y: auto;">
-                <div class="menu-title">Create Your Hero</div>
-
-                <div class="form-group">
-                    <label>Character Name</label>
-                    <input type="text" id="charNameInput" placeholder="Enter name" maxlength="15">
-                </div>
-
-                <div class="form-group">
-                    <label>Starting Weapon</label>
-                    <select id="weaponSelect">
-                        <option value="sword">⚔️ Sword</option>
-                        <option value="bow">🏹 Bow</option>
-                        <option value="staff">🎯 Staff</option>
-                        <option value="dagger">🗡️ Dagger</option>
-                        <option value="hammer">🔨 Hammer</option>
-                    </select>
-                </div>
-
-                <div class="character-preview" id="charPreview">🧙‍♂️</div>
-
-                <button class="menu-btn" id="createCharBtn">Create Character</button>
-            </div>
-        </div>
-
-        <!-- Inventory Modal -->
-        <div class="modal" id="inventoryModal">
-            <div class="modal-content">
-                <div class="modal-title">
-                    <span>📦 Inventory</span>
-                    <button class="close-btn" onclick="game.closeModal('inventoryModal')">✕</button>
-                </div>
-
-                <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="weapons">Weapons</button>
-                    <button class="tab-btn" data-tab="armor">Armor</button>
-                    <button class="tab-btn" data-tab="materials">Materials</button>
-                </div>
-
-                <div id="weapons" class="tab-content active">
-                    <div id="weaponsInventory" class="inventory-grid"></div>
-                </div>
-
-                <div id="armor" class="tab-content">
-                    <div id="armorInventory" class="inventory-grid"></div>
-                </div>
-
-                <div id="materials" class="tab-content">
-                    <div id="materialsInventory" class="inventory-grid"></div>
-                </div>
-
-                <div id="itemDetails" class="item-details">
-                    <div id="itemName" style="color: #ffcc00; font-weight: bold; margin-bottom: 5px;"></div>
-                    <div id="itemStats" style="font-size: 11px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Skills Modal -->
-        <div class="modal" id="skillsModal">
-            <div class="modal-content">
-                <div class="modal-title">
-                    <span>⭐ Skills & Mastery</span>
-                    <button class="close-btn" onclick="game.closeModal('skillsModal')">✕</button>
-                </div>
-
-                <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="sword">Sword</button>
-                    <button class="tab-btn" data-tab="bow">Bow</button>
-                    <button class="tab-btn" data-tab="magic">Magic</button>
-                </div>
-
-                <div id="sword" class="tab-content active">
-                    <div id="swordSkills"></div>
-                </div>
-
-                <div id="bow" class="tab-content">
-                    <div id="bowSkills"></div>
-                </div>
-
-                <div id="magic" class="tab-content">
-                    <div id="magicSkills"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stat Allocation Modal -->
-        <div class="modal" id="statAllocationModal">
-            <div class="modal-content">
-                <div class="modal-title">
-                    <span>📊 Allocate Stats</span>
-                </div>
-                <p style="font-size: 12px; margin-bottom: 10px;">Points: <span id="statPointsRemaining">3</span></p>
-
-                <div class="stat-allocation">
-                    <div class="stat-box">
-                        <label>STR</label>
-                        <input type="number" id="strAlloc" value="0" class="stat-input" readonly>
-                        <div class="stat-buttons">
-                            <button class="stat-btn" onclick="game.allocateStat('str', -1)">−</button>
-                            <button class="stat-btn" onclick="game.allocateStat('str', 1)">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-box">
-                        <label>INT</label>
-                        <input type="number" id="intAlloc" value="0" class="stat-input" readonly>
-                        <div class="stat-buttons">
-                            <button class="stat-btn" onclick="game.allocateStat('int', -1)">−</button>
-                            <button class="stat-btn" onclick="game.allocateStat('int', 1)">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-box">
-                        <label>DEF</label>
-                        <input type="number" id="defAlloc" value="0" class="stat-input" readonly>
-                        <div class="stat-buttons">
-                            <button class="stat-btn" onclick="game.allocateStat('def', -1)">−</button>
-                            <button class="stat-btn" onclick="game.allocateStat('def', 1)">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-box">
-                        <label>AGI</label>
-                        <input type="number" id="agiAlloc" value="0" class="stat-input" readonly>
-                        <div class="stat-buttons">
-                            <button class="stat-btn" onclick="game.allocateStat('agi', -1)">−</button>
-                            <button class="stat-btn" onclick="game.allocateStat('agi', 1)">+</button>
-                        </div>
-                    </div>
-
-                    <div class="stat-box">
-                        <label>CRT</label>
-                        <input type="number" id="crtAlloc" value="0" class="stat-input" readonly>
-                        <div class="stat-buttons">
-                            <button class="stat-btn" onclick="game.allocateStat('crt', -1)">−</button>
-                            <button class="stat-btn" onclick="game.allocateStat('crt', 1)">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="menu-btn" id="confirmStatBtn">Confirm</button>
-            </div>
+    </div>
+    <div id="bottom-ui">
+        <div id="log-box">คลังสูตรผสมจะถูกผูกติดกับบัญชีถาวร แม้เริ่มเกมใหม่สูตรก็ไม่หาย!</div>
+        <div id="sell-zone">🗑️ ลากมอนสเตอร์มาทิ้งที่นี่เพื่อขาย (ดาว x 4 ทอง)</div>
+        <div id="controls">
+            <button id="btn-menu" onclick="showMenu()">☰</button>
+            <button id="btn-buy" onclick="buyRandomUnit()">🛒 ซื้อตัวฐาน (5G)</button>
+            <button id="btn-start" onclick="startCombat()">⚔️ เริ่มต่อสู้</button>
         </div>
     </div>
-
-    <script>
-        const ITEM_DATABASE = {
-            sword: { name: 'Sword', type: 'weapon', rarity: 'common', stats: { str: 5 }, level: 1, emoji: '⚔️' },
-            dagger: { name: 'Dagger', type: 'weapon', rarity: 'common', stats: { str: 3, agi: 2 }, level: 1, emoji: '🗡️' },
-            bow: { name: 'Bow', type: 'weapon', rarity: 'common', stats: { str: 2, agi: 4 }, level: 1, emoji: '🏹' },
-            staff: { name: 'Staff', type: 'weapon', rarity: 'common', stats: { int: 5 }, level: 1, emoji: '🎯' },
-            hammer: { name: 'Hammer', type: 'weapon', rarity: 'common', stats: { str: 8, def: 2 }, level: 1, emoji: '🔨' },
-            leather_armor: { name: 'Armor', type: 'armor', rarity: 'common', stats: { def: 3 }, level: 1, emoji: '🛡️' },
-            slime_gel: { name: 'Slime Gel', type: 'material', rarity: 'common', value: 5, emoji: '💧' },
-            broken_bone: { name: 'Bone', type: 'material', rarity: 'common', value: 5, emoji: '🦴' },
-            goblin_ear: { name: 'Ear', type: 'material', rarity: 'common', value: 5, emoji: '👂' },
-            health_potion: { name: 'HP Potion', type: 'consumable', effect: 'heal', value: 30, emoji: '🧪' }
-        };
-
-        const SKILLS_DATABASE = {
-            sword: [
-                { name: 'Slash', level: 0, masteryRequired: 0, description: 'Basic', damage: 1.0 },
-                { name: 'Heavy Slash', level: 5, masteryRequired: 25, description: 'Powerful', damage: 1.5 },
-                { name: 'Spin', level: 10, masteryRequired: 50, description: 'Area', damage: 1.2 }
-            ],
-            bow: [
-                { name: 'Shot', level: 0, masteryRequired: 0, description: 'Basic', damage: 1.0 },
-                { name: 'Double Shot', level: 5, masteryRequired: 25, description: 'Two arrows', damage: 0.8 },
-                { name: 'Rain', level: 10, masteryRequired: 50, description: 'Area', damage: 1.2 }
-            ],
-            magic: [
-                { name: 'Fireball', level: 5, masteryRequired: 20, description: 'Fire', damage: 1.5 },
-                { name: 'Ice Spike', level: 10, masteryRequired: 50, description: 'Ice', damage: 1.3 },
-                { name: 'Lightning', level: 15, masteryRequired: 100, description: 'Electric', damage: 1.7 }
-            ]
-        };
-
-        class GameEngine {
-            constructor() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.minimapCanvas = document.getElementById('minimap');
-                this.minimapCtx = this.minimapCanvas.getContext('2d');
-
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-                this.minimapCanvas.width = 100;
-                this.minimapCanvas.height = 100;
-
-                this.gameState = 'menu';
-                this.running = false;
-
-                this.initPlayer();
-                this.initWorld();
-                this.initEventListeners();
-                this.setupTabButtons();
-                this.setupTouchControls();
-            }
-
-            initPlayer() {
-                this.player = {
-                    name: 'Hero',
-                    x: 100,
-                    y: 100,
-                    angle: 0,
-                    speed: 3,
-                    rotSpeed: 0.08,
-
-                    level: 1,
-                    exp: 0,
-                    maxExp: 100,
-                    credits: 0,
-                    statPoints: 0,
-
-                    hp: 100,
-                    maxHp: 100,
-                    mp: 50,
-                    maxMp: 50,
-
-                    stats: { str: 5, int: 5, def: 5, agi: 5, crt: 5 },
-                    baseStats: { str: 5, int: 5, def: 5, agi: 5, crt: 5 },
-                    tempAllocations: { str: 0, int: 0, def: 0, agi: 0, crt: 0 },
-
-                    equipment: { weapon: 'sword', armor: 'leather_armor' },
-                    inventory: [
-                        { id: 'sword', quantity: 1 },
-                        { id: 'leather_armor', quantity: 1 },
-                        { id: 'health_potion', quantity: 5 },
-                        { id: 'slime_gel', quantity: 3 }
-                    ],
-                    mastery: { sword: 0, bow: 0, magic: 0 }
-                };
-            }
-
-            initWorld() {
-                this.worldMap = [
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,1,1,0,0,0,0,0,0,1,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,1,1,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,1,1,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-                    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-                ];
-
-                this.tileSize = 64;
-                this.monsters = [];
-                this.spawnInitialMonsters();
-            }
-
-            spawnInitialMonsters() {
-                const monsterTypes = ['goblin', 'skeleton', 'slime'];
-                for (let i = 0; i < 15; i++) {
-                    const type = monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
-                    const x = Math.random() * 900 + 50;
-                    const y = Math.random() * 700 + 50;
-
-                    if (this.isWalkable(x, y)) {
-                        this.monsters.push(this.createMonster(type, x, y));
-                    }
-                }
-            }
-
-            createMonster(type, x, y) {
-                const stats = {
-                    goblin: { str: 3, int: 2, def: 2, agi: 4, crt: 2, hp: 20 },
-                    skeleton: { str: 4, int: 3, def: 3, agi: 3, crt: 3, hp: 25 },
-                    slime: { str: 2, int: 2, def: 1, agi: 2, crt: 1, hp: 15 }
-                };
-
-                const monsterStats = stats[type] || stats.goblin;
-                return {
-                    type,
-                    x,
-                    y,
-                    hp: monsterStats.hp,
-                    maxHp: monsterStats.hp,
-                    stats: monsterStats,
-                    level: this.player.level,
-                    color: type === 'goblin' ? '#00ff00' : type === 'skeleton' ? '#888888' : '#0088ff'
-                };
-            }
-
-            isWalkable(x, y) {
-                const tileX = Math.floor(x / this.tileSize);
-                const tileY = Math.floor(y / this.tileSize);
-
-                if (tileX < 0 || tileX >= this.worldMap[0].length ||
-                    tileY < 0 || tileY >= this.worldMap.length) {
-                    return false;
-                }
-
-                return this.worldMap[tileY][tileX] === 0;
-            }
-
-            setupTouchControls() {
-                const movementPad = document.getElementById('movementPad');
-                const movementStick = document.getElementById('movementStick');
-                let isMoving = false;
-
-                document.addEventListener('touchstart', (e) => {
-                    if (this.gameState !== 'exploration') return;
-                    
-                    const touch = e.touches[0];
-                    const rect = this.canvas.getBoundingClientRect();
-                    const x = touch.clientX - rect.left;
-                    const y = touch.clientY - rect.top;
-
-                    if (x < 120 && y > rect.height - 120) {
-                        isMoving = true;
-                        movementPad.style.display = 'flex';
-                    }
-                });
-
-                document.addEventListener('touchmove', (e) => {
-                    if (!isMoving) return;
-
-                    const touch = e.touches[0];
-                    const rect = movementPad.getBoundingClientRect();
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-
-                    const x = touch.clientX - rect.left - centerX;
-                    const y = touch.clientY - rect.top - centerY;
-                    const dist = Math.sqrt(x * x + y * y);
-                    const maxDist = 30;
-
-                    let moveX = x;
-                    let moveY = y;
-
-                    if (dist > maxDist) {
-                        moveX = (x / dist) * maxDist;
-                        moveY = (y / dist) * maxDist;
-                    }
-
-                    movementStick.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
-
-                    const angle = Math.atan2(moveY, moveX);
-                    if (Math.abs(moveY) > 10) {
-                        if (moveY < 0) {
-                            this.player.moveForward = true;
-                            this.player.moveBackward = false;
-                        } else {
-                            this.player.moveBackward = true;
-                            this.player.moveForward = false;
-                        }
-                    } else {
-                        this.player.moveForward = false;
-                        this.player.moveBackward = false;
-                    }
-
-                    if (moveX < -15) {
-                        this.player.turnLeft = true;
-                        this.player.turnRight = false;
-                    } else if (moveX > 15) {
-                        this.player.turnRight = true;
-                        this.player.turnLeft = false;
-                    } else {
-                        this.player.turnLeft = false;
-                        this.player.turnRight = false;
-                    }
-                });
-
-                document.addEventListener('touchend', () => {
-                    isMoving = false;
-                    movementPad.style.display = 'none';
-                    movementStick.style.transform = 'translate(-50%, -50%)';
-                    this.player.moveForward = false;
-                    this.player.moveBackward = false;
-                    this.player.turnLeft = false;
-                    this.player.turnRight = false;
-                });
-            }
-
-            initEventListeners() {
-                document.getElementById('newGameBtn').addEventListener('click', () => this.showCharCreation());
-                document.getElementById('continueBtn').addEventListener('click', () => this.startNewGame());
-                document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
-
-                document.getElementById('attackBtn').addEventListener('click', () => this.playerAttack());
-                document.getElementById('skillBtn').addEventListener('click', () => this.useSkill());
-                document.getElementById('itemBtn').addEventListener('click', () => this.useItem());
-                document.getElementById('fleeBtn').addEventListener('click', () => this.fleeCombat());
-
-                document.getElementById('inventoryBtn').addEventListener('click', () => this.openInventory());
-                document.getElementById('skillsBtn').addEventListener('click', () => this.openSkills());
-                document.getElementById('menuBtn').addEventListener('click', () => this.showMainMenu());
-
-                document.getElementById('createCharBtn').addEventListener('click', () => this.createCharacter());
-                document.getElementById('confirmStatBtn').addEventListener('click', () => this.confirmStats());
-
-                window.addEventListener('resize', () => this.onResize());
-            }
-
-            setupTabButtons() {
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const modal = e.target.closest('.modal');
-                        if (!modal) return;
-
-                        const tabName = e.target.dataset.tab;
-                        const tabs = modal.querySelectorAll('.tab-content');
-                        const buttons = modal.querySelectorAll('.tab-btn');
-
-                        tabs.forEach(t => t.classList.remove('active'));
-                        buttons.forEach(b => b.classList.remove('active'));
-
-                        const targetTab = modal.querySelector(`#${tabName}`);
-                        if (targetTab) targetTab.classList.add('active');
-                        e.target.classList.add('active');
-                    });
-                });
-            }
-
-            showCharCreation() {
-                document.getElementById('menuScreen').classList.remove('active');
-                document.getElementById('charCreationScreen').classList.add('active');
-            }
-
-            showMainMenu() {
-                this.running = false;
-                this.gameState = 'menu';
-                document.getElementById('menuScreen').classList.add('active');
-            }
-
-            createCharacter() {
-                const name = document.getElementById('charNameInput').value || 'Hero';
-                this.player.name = name;
-
-                document.getElementById('charCreationScreen').classList.remove('active');
-                this.startNewGame();
-            }
-
-            startNewGame() {
-                this.gameState = 'exploration';
-                document.getElementById('menuScreen').classList.remove('active');
-                document.getElementById('charCreationScreen').classList.remove('active');
-                this.running = true;
-                this.gameLoop();
-            }
-
-            logout() {
-                location.reload();
-            }
-
-            openInventory() {
-                this.refreshInventory();
-                document.getElementById('inventoryModal').classList.add('active');
-            }
-
-            openSkills() {
-                this.refreshSkills();
-                document.getElementById('skillsModal').classList.add('active');
-            }
-
-            closeModal(modalId) {
-                document.getElementById(modalId).classList.remove('active');
-            }
-
-            refreshInventory() {
-                const categories = ['weapons', 'armor', 'materials'];
-
-                categories.forEach(cat => {
-                    const container = document.getElementById(cat + 'Inventory');
-                    container.innerHTML = '';
-
-                    this.player.inventory.forEach(invItem => {
-                        const itemData = ITEM_DATABASE[invItem.id];
-                        if (!itemData) return;
-
-                        const categoryMap = {
-                            'weapon': 'weapons',
-                            'armor': 'armor',
-                            'material': 'materials'
-                        };
-
-                        if (categoryMap[itemData.type] === cat) {
-                            const div = document.createElement('div');
-                            div.className = `inventory-item ${itemData.rarity || ''}`;
-                            div.textContent = `${itemData.emoji}\n${invItem.quantity}`;
-                            div.onclick = () => this.showItemDetails(invItem.id);
-                            container.appendChild(div);
-                        }
-                    });
-                });
-            }
-
-            showItemDetails(itemId) {
-                const item = ITEM_DATABASE[itemId];
-                const details = document.getElementById('itemDetails');
-                details.classList.add('active');
-
-                document.getElementById('itemName').textContent = item.emoji + ' ' + item.name;
-
-                let statsHTML = '';
-                if (item.stats) {
-                    Object.entries(item.stats).forEach(([stat, value]) => {
-                        statsHTML += `<div>${stat.toUpperCase()}: +${value}</div>`;
-                    });
-                }
-                document.getElementById('itemStats').innerHTML = statsHTML;
-            }
-
-            refreshSkills() {
-                const weaponTypes = ['sword', 'bow', 'magic'];
-
-                weaponTypes.forEach(weapon => {
-                    const container = document.getElementById(weapon + 'Skills');
-                    container.innerHTML = '';
-
-                    const mastery = this.player.mastery[weapon] || 0;
-                    const skills = SKILLS_DATABASE[weapon] || [];
-
-                    skills.forEach(skill => {
-                        const unlocked = mastery >= skill.masteryRequired;
-                        const div = document.createElement('div');
-                        div.className = `skill-card ${!unlocked ? 'locked' : ''}`;
-
-                        div.innerHTML = `
-                            <div style="color: #ffcc00; font-weight: bold; font-size: 13px;">${skill.name}</div>
-                            <div style="font-size: 11px; color: #aaa;">${skill.description}</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${(mastery / skill.masteryRequired * 100) || 0}%"></div>
-                            </div>
-                            <div style="font-size: 10px; color: #666;">Mastery: ${mastery}/${skill.masteryRequired}</div>
-                        `;
-                        container.appendChild(div);
-                    });
-                });
-            }
-
-            allocateStat(stat, amount) {
-                const remaining = 3 - Object.values(this.player.tempAllocations).reduce((a, b) => a + b, 0);
-
-                if (amount > 0 && remaining > 0) {
-                    this.player.tempAllocations[stat]++;
-                } else if (amount < 0 && this.player.tempAllocations[stat] > 0) {
-                    this.player.tempAllocations[stat]--;
-                }
-
-                this.updateStatAllocationDisplay();
-            }
-
-            updateStatAllocationDisplay() {
-                const remaining = 3 - Object.values(this.player.tempAllocations).reduce((a, b) => a + b, 0);
-                document.getElementById('statPointsRemaining').textContent = remaining;
-
-                Object.entries(this.player.tempAllocations).forEach(([stat, value]) => {
-                    const elem = document.getElementById(stat + 'Alloc');
-                    if (elem) elem.value = value;
-                });
-            }
-
-            confirmStats() {
-                Object.entries(this.player.tempAllocations).forEach(([stat, value]) => {
-                    this.player.stats[stat] += value;
-                });
-
-                this.player.tempAllocations = { str: 0, int: 0, def: 0, agi: 0, crt: 0 };
-                this.closeModal('statAllocationModal');
-                this.updateHUD();
-            }
-
-            onResize() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            }
-
-            updatePlayer() {
-                if (this.player.turnLeft) this.player.angle -= this.player.rotSpeed;
-                if (this.player.turnRight) this.player.angle += this.player.rotSpeed;
-
-                let newX = this.player.x;
-                let newY = this.player.y;
-
-                if (this.player.moveForward) {
-                    newX += Math.cos(this.player.angle) * this.player.speed;
-                    newY += Math.sin(this.player.angle) * this.player.speed;
-                }
-                if (this.player.moveBackward) {
-                    newX -= Math.cos(this.player.angle) * this.player.speed;
-                    newY -= Math.sin(this.player.angle) * this.player.speed;
-                }
-
-                if (this.isWalkable(newX, newY)) {
-                    this.player.x = newX;
-                    this.player.y = newY;
-                }
-
-                this.checkMonsterCollision();
-            }
-
-            checkMonsterCollision() {
-                for (let monster of this.monsters) {
-                    const dx = this.player.x - monster.x;
-                    const dy = this.player.y - monster.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < 40) {
-                        this.startCombat(monster);
-                        break;
-                    }
-                }
-            }
-
-            startCombat(monster) {
-                this.gameState = 'combat';
-                this.currentMonster = monster;
-                document.getElementById('combatUI').classList.add('active');
-                this.updateCombatUI();
-            }
-
-            updateCombatUI() {
-                const info = document.getElementById('combatInfo');
-                info.innerHTML = `
-                    <strong>⚔️ ${this.currentMonster.type.toUpperCase()}</strong><br>
-                    Enemy HP: ${this.currentMonster.hp}/${this.currentMonster.maxHp}<br>
-                    Your HP: ${this.player.hp}/${this.player.maxHp}
-                `;
-            }
-
-            playerAttack() {
-                if (this.gameState !== 'combat') return;
-
-                const damage = this.calculateDamage(this.player, this.currentMonster);
-                this.currentMonster.hp -= damage;
-
-                if (this.currentMonster.hp <= 0) {
-                    this.winCombat();
-                } else {
-                    setTimeout(() => this.monsterAttack(), 300);
-                }
-
-                this.updateCombatUI();
-            }
-
-            monsterAttack() {
-                const damage = this.calculateDamage(this.currentMonster, this.player);
-                this.player.hp -= damage;
-
-                if (this.player.hp <= 0) {
-                    this.loseCombat();
-                }
-
-                this.updateCombatUI();
-            }
-
-            calculateDamage(attacker, defender) {
-                const baseDamage = attacker.stats.str * 2;
-                const variance = Math.random() * 10 - 5;
-                const defense = defender.stats.def;
-                const finalDamage = Math.max(1, baseDamage + variance - defense / 2);
-
-                return Math.floor(finalDamage);
-            }
-
-            winCombat() {
-                const exp = this.currentMonster.level * 10;
-                const credits = this.currentMonster.level * 5 + Math.floor(Math.random() * 10);
-
-                this.player.exp += exp;
-                this.player.credits += credits;
-
-                const drops = {
-                    goblin: ['goblin_ear', 'dagger'],
-                    skeleton: ['broken_bone', 'slime_gel'],
-                    slime: ['slime_gel', 'health_potion']
-                };
-
-                if (Math.random() < 0.3) {
-                    const possibleDrops = drops[this.currentMonster.type] || [];
-                    const dropped = possibleDrops[Math.floor(Math.random() * possibleDrops.length)];
-
-                    const existingItem = this.player.inventory.find(i => i.id === dropped);
-                    if (existingItem) {
-                        existingItem.quantity++;
-                    } else {
-                        this.player.inventory.push({ id: dropped, quantity: 1 });
-                    }
-                }
-
-                this.player.mastery[this.player.equipment.weapon] = (this.player.mastery[this.player.equipment.weapon] || 0) + 1;
-
-                if (this.player.exp >= this.player.maxExp) {
-                    this.levelUp();
-                }
-
-                this.monsters = this.monsters.filter(m => m !== this.currentMonster);
-                this.endCombat();
-            }
-
-            loseCombat() {
-                this.player.hp = this.player.maxHp;
-                this.player.x = 100;
-                this.player.y = 100;
-                this.endCombat();
-            }
-
-            levelUp() {
-                this.player.level++;
-                this.player.exp = 0;
-                this.player.maxExp = Math.floor(this.player.maxExp * 1.5);
-                this.player.maxHp += 10;
-                this.player.hp = this.player.maxHp;
-                this.player.statPoints += 3;
-
-                document.getElementById('statAllocationModal').classList.add('active');
-                this.updateStatAllocationDisplay();
-            }
-
-            useSkill() {
-                alert('Skill Combat - Press K for skills menu');
-            }
-
-            useItem() {
-                const potion = this.player.inventory.find(i => i.id === 'health_potion');
-                if (potion && potion.quantity > 0) {
-                    this.player.hp = Math.min(this.player.hp + 30, this.player.maxHp);
-                    potion.quantity--;
-                    if (potion.quantity === 0) {
-                        this.player.inventory = this.player.inventory.filter(i => i.id !== 'health_potion');
-                    }
-                    setTimeout(() => this.monsterAttack(), 300);
-                    this.updateCombatUI();
-                }
-            }
-
-            fleeCombat() {
-                const escapeChance = this.player.stats.agi / (this.player.stats.agi + this.currentMonster.stats.agi);
-                if (Math.random() < escapeChance) {
-                    this.endCombat();
-                } else {
-                    setTimeout(() => this.monsterAttack(), 300);
-                    this.updateCombatUI();
-                }
-            }
-
-            endCombat() {
-                this.gameState = 'exploration';
-                document.getElementById('combatUI').classList.remove('active');
-                this.currentMonster = null;
-            }
-
-            renderRaycasting() {
-                const rayCount = Math.min(this.canvas.width, 320);
-                const raySpacing = this.canvas.width / rayCount;
-
-                for (let i = 0; i < rayCount; i++) {
-                    const rayAngle = this.player.angle - (Math.PI / 6) + (i / rayCount) * (Math.PI / 3);
-                    const distance = this.castRay(rayAngle);
-                    this.drawWall(i * raySpacing, raySpacing, distance);
-                }
-
-                this.renderFloorAndCeiling();
-                this.renderMonsters();
-            }
-
-            castRay(angle) {
-                let distance = 0;
-                let maxDistance = 1000;
-                let step = 5;
-
-                for (distance = 0; distance < maxDistance; distance += step) {
-                    const x = this.player.x + Math.cos(angle) * distance;
-                    const y = this.player.y + Math.sin(angle) * distance;
-
-                    if (!this.isWalkable(x, y)) {
-                        return distance;
-                    }
-                }
-
-                return maxDistance;
-            }
-
-            drawWall(x, width, distance) {
-                distance *= Math.cos(this.player.angle - (Math.PI / 6 - x / this.canvas.width * (Math.PI / 3)));
-
-                const wallHeight = Math.max(0, (this.canvas.height / distance) * 100);
-                const wallTop = (this.canvas.height - wallHeight) / 2;
-
-                const brightness = Math.max(20, 255 - distance * 0.2);
-                const color = `rgb(${brightness * 0.6}, ${brightness * 0.5}, ${brightness * 0.4})`;
-
-                this.ctx.fillStyle = color;
-                this.ctx.fillRect(x, wallTop, width, wallHeight);
-
-                this.ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-                this.ctx.lineWidth = 1;
-                this.ctx.strokeRect(x, wallTop, width, wallHeight);
-            }
-
-            renderFloorAndCeiling() {
-                this.ctx.fillStyle = '#1a1a1a';
-                this.ctx.fillRect(0, this.canvas.height / 2, this.canvas.width, this.canvas.height / 2);
-
-                this.ctx.fillStyle = '#0f0f0f';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height / 2);
-            }
-
-            renderMonsters() {
-                for (let monster of this.monsters) {
-                    const dx = monster.x - this.player.x;
-                    const dy = monster.y - this.player.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < 500) {
-                        const angle = Math.atan2(dy, dx) - this.player.angle;
-                        const screenX = this.canvas.width / 2 + Math.sin(angle) * (this.canvas.width / 3);
-                        const screenY = this.canvas.height / 2 - (distance / 500) * (this.canvas.height / 3);
-                        const size = Math.max(5, 50 / (distance / 100));
-
-                        this.ctx.fillStyle = monster.color;
-                        this.ctx.fillRect(screenX - size / 2, screenY - size / 2, size, size);
-                    }
-                }
-            }
-
-            renderMinimap() {
-                const scale = 100 / (15 * 64);
-
-                this.minimapCtx.fillStyle = '#000';
-                this.minimapCtx.fillRect(0, 0, 100, 100);
-
-                this.minimapCtx.fillStyle = '#666';
-                for (let y = 0; y < this.worldMap.length; y++) {
-                    for (let x = 0; x < this.worldMap[0].length; x++) {
-                        if (this.worldMap[y][x] === 1) {
-                            this.minimapCtx.fillRect(x * scale, y * scale, scale, scale);
-                        }
-                    }
-                }
-
-                this.minimapCtx.fillStyle = '#ffcc00';
-                this.minimapCtx.fillRect((this.player.x / 64) * scale - 2, (this.player.y / 64) * scale - 2, 4, 4);
-
-                for (let monster of this.monsters) {
-                    this.minimapCtx.fillStyle = monster.color;
-                    this.minimapCtx.fillRect((monster.x / 64) * scale - 2, (monster.y / 64) * scale - 2, 4, 4);
-                }
-
-                this.minimapCtx.strokeStyle = '#ffcc00';
-                this.minimapCtx.lineWidth = 2;
-                this.minimapCtx.strokeRect(0, 0, 100, 100);
-            }
-
-            updateHUD() {
-                document.getElementById('playerNameDisplay').textContent = this.player.name;
-                document.getElementById('levelDisplay').textContent = this.player.level;
-                document.getElementById('hpDisplay').textContent = `${this.player.hp}/${this.player.maxHp}`;
-                document.getElementById('expDisplay').textContent = `${this.player.exp}/${this.player.maxExp}`;
-                document.getElementById('creditsDisplay').textContent = this.player.credits;
-            }
-
-            gameLoop() {
-                if (!this.running) return;
-
-                this.ctx.fillStyle = '#000';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-                if (this.gameState === 'exploration') {
-                    this.updatePlayer();
-                    this.renderRaycasting();
-                    this.renderMinimap();
-                    this.updateHUD();
-                }
-
-                requestAnimationFrame(() => this.gameLoop());
-            }
-
-            start() {
-                setTimeout(() => {
-                    document.querySelector('.loading-screen').style.display = 'none';
-                }, 3500);
-            }
+</div>
+
+<script>
+// ==========================================
+// IMAGE SYSTEM
+// ==========================================
+// โหลดรูปภาพจากโฟลเดอร์ ./monsters/
+// ชื่อไฟล์ต้องตรงกับ id ของมอนสเตอร์ในโค้ด เช่น slime.png, wolf.png
+// ถ้าไม่พบรูป จะแสดง fallback เป็นวงกลมสีแทน
+const MONSTER_IMAGES = {};
+
+function preloadImages() {
+    const TIER1_IDS = [
+        'slime','slime_ice','wolf','bat','goblin','bird','turtle','fire_spirit',
+        'shadow_essence','cat','rat','mushroom','bee','frog',
+        'skeleton','plant','spider','zombie','lizard','golem_stone','fairy','ghost','crab'
+    ];
+    return new Promise(resolve => {
+        let loaded = 0;
+        TIER1_IDS.forEach(id => {
+            const img = new Image();
+            img.onload = img.onerror = () => { loaded++; if (loaded >= TIER1_IDS.length) resolve(); };
+            img.src = './monsters/' + id + '.png';
+            MONSTER_IMAGES[id] = img;
+        });
+    });
+}
+
+// ==========================================
+// 1. Monster Database & Layout
+// ==========================================
+const GRID_LAYOUT = [
+    [0, 1, 1, 1, 0], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1],
+    [2, 2, 2, 2, 2], [2, 2, 2, 2, 2], [0, 2, 2, 2, 0],
+    [3, 3, 3, 3, 3], [3, 3, 3, 3, 3]
+];
+
+const MONSTERS = {
+    // --- TIER 1 ---
+    slime:          { id: 'slime',          name: 'สไลม์',             hp: 80,   atk: 12, color: '#44ddff', tier: 1 },
+    slime_ice:      { id: 'slime_ice',      name: 'สไลม์น้ำแข็ง',     hp: 85,   atk: 11, color: '#aaeeff', tier: 1 },
+    wolf:           { id: 'wolf',           name: 'หมาป่า',            hp: 100,  atk: 15, color: '#889999', tier: 1 },
+    bat:            { id: 'bat',            name: 'ค้างคาว',           hp: 70,   atk: 20, color: '#553355', tier: 1 },
+    goblin:         { id: 'goblin',         name: 'ก็อบลิน',           hp: 90,   atk: 18, color: '#44aa44', tier: 1 },
+    bird:           { id: 'bird',           name: 'นกวายุ',            hp: 75,   atk: 19, color: '#66ccff', tier: 1 },
+    turtle:         { id: 'turtle',         name: 'เต่าศิลา',          hp: 160,  atk: 8,  color: '#669955', tier: 1 },
+    fire_spirit:    { id: 'fire_spirit',    name: 'ภูตอัคคี',          hp: 65,   atk: 25, color: '#ff6633', tier: 1 },
+    shadow_essence: { id: 'shadow_essence', name: 'เศษเสี้ยวเงา',     hp: 70,   atk: 21, color: '#445588', tier: 1 },
+    cat:            { id: 'cat',            name: 'แมวศักดิ์สิทธิ์',  hp: 85,   atk: 17, color: '#aabb88', tier: 1 },
+    rat:            { id: 'rat',            name: 'หนูพิษ',            hp: 65,   atk: 22, color: '#997755', tier: 1 },
+    mushroom:       { id: 'mushroom',       name: 'เห็ดพิษ',           hp: 95,   atk: 14, color: '#cc4488', tier: 1 },
+    bee:            { id: 'bee',            name: 'ผึ้งรบ',            hp: 60,   atk: 24, color: '#ffbb00', tier: 1 },
+    frog:           { id: 'frog',           name: 'กบพายุ',            hp: 110,  atk: 13, color: '#44cc66', tier: 1 },
+
+    // --- TIER 1 LOCKED ---
+    skeleton:       { id: 'skeleton',       name: 'โครงกระดูก',        hp: 110,  atk: 14, color: '#eeeedd', tier: 1 },
+    plant:          { id: 'plant',          name: 'พืชปีศาจ',          hp: 120,  atk: 10, color: '#33aa22', tier: 1 },
+    spider:         { id: 'spider',         name: 'แมงมุมพิษ',         hp: 75,   atk: 17, color: '#772288', tier: 1 },
+    zombie:         { id: 'zombie',         name: 'ซอมบี้',            hp: 130,  atk: 11, color: '#557755', tier: 1 },
+    lizard:         { id: 'lizard',         name: 'กิ้งก่าดิน',        hp: 95,   atk: 16, color: '#66aa88', tier: 1 },
+    golem_stone:    { id: 'golem_stone',    name: 'หินมีชีวิต',        hp: 150,  atk: 9,  color: '#888888', tier: 1 },
+    fairy:          { id: 'fairy',          name: 'แฟรี่',             hp: 60,   atk: 22, color: '#ff88cc', tier: 1 },
+    ghost:          { id: 'ghost',          name: 'วิญญาณเร่ร่อน',    hp: 80,   atk: 18, color: '#88ddff', tier: 1 },
+    crab:           { id: 'crab',           name: 'ปูหิน',             hp: 140,  atk: 12, color: '#ff7744', tier: 1 },
+
+    // --- TIER 2 ---
+    slimewolf:      { id: 'slimewolf',      name: 'สไลม์วูล์ฟ',        hp: 165,  atk: 24, color: '#5588cc', tier: 2 },
+    ice_wolf:       { id: 'ice_wolf',       name: 'หมาป่าน้ำแข็ง',    hp: 175,  atk: 23, color: '#77ccff', tier: 2 },
+    gargoyle:       { id: 'gargoyle',       name: 'การ์กอยล์',         hp: 195,  atk: 30, color: '#667799', tier: 2 },
+    slimerider:     { id: 'slimerider',     name: 'ก็อบลินขี่สไลม์',   hp: 150,  atk: 28, color: '#33bbcc', tier: 2 },
+    wolfrider:      { id: 'wolfrider',      name: 'คนป่าขี่หมาป่า',   hp: 190,  atk: 26, color: '#778855', tier: 2 },
+    imp:            { id: 'imp',            name: 'อิมป์ปีศาจ',        hp: 125,  atk: 35, color: '#dd3333', tier: 2 },
+    winged_slime:   { id: 'winged_slime',   name: 'สไลม์เวหา',        hp: 135,  atk: 27, color: '#88ddff', tier: 2 },
+    pegasus:        { id: 'pegasus',        name: 'เปกาซัส',           hp: 175,  atk: 32, color: '#ddeeff', tier: 2 },
+    magma_slime:    { id: 'magma_slime',    name: 'แมกม่าสไลม์',      hp: 155,  atk: 36, color: '#ff4500', tier: 2 },
+    turtle_shield:  { id: 'turtle_shield',  name: 'ก็อบลินโล่เต่า',   hp: 230,  atk: 18, color: '#44aa66', tier: 2 },
+    phoenix_chick:  { id: 'phoenix_chick',  name: 'ลูกนกฟีนิกซ์',    hp: 140,  atk: 38, color: '#ff9933', tier: 2 },
+    shadow_crawler: { id: 'shadow_crawler', name: 'เงาคืบคลาน',      hp: 145,  atk: 34, color: '#331144', tier: 2 },
+    sabertooth:     { id: 'sabertooth',     name: 'เสือเขี้ยวดาบ',    hp: 185,  atk: 31, color: '#cc8833', tier: 2 },
+    rat_king:       { id: 'rat_king',       name: 'ราชาหนูพิษ',        hp: 160,  atk: 33, color: '#553311', tier: 2 },
+    mushroom_giant: { id: 'mushroom_giant', name: 'เห็ดยักษ์',         hp: 210,  atk: 22, color: '#993355', tier: 2 },
+    bee_queen:      { id: 'bee_queen',      name: 'ราชินีผึ้ง',        hp: 145,  atk: 40, color: '#ffcc00', tier: 2 },
+    frog_shaman:    { id: 'frog_shaman',    name: 'กบพ่อมด',           hp: 155,  atk: 32, color: '#22bb55', tier: 2 },
+
+    // --- TIER 2 LOCKED ---
+    poisonslime:    { id: 'poisonslime',    name: 'สไลม์พิษ',          hp: 150,  atk: 26, color: '#88cc22', tier: 2 },
+    orc:            { id: 'orc',           name: 'ออร์ค',              hp: 220,  atk: 25, color: '#448844', tier: 2 },
+    vampire:        { id: 'vampire',        name: 'แวมไพร์',           hp: 175,  atk: 38, color: '#991122', tier: 2 },
+    venomspider:    { id: 'venomspider',    name: 'พญาแมงมุม',         hp: 165,  atk: 32, color: '#441155', tier: 2 },
+    ghoul:          { id: 'ghoul',          name: 'กูลกินศพ',          hp: 200,  atk: 22, color: '#335533', tier: 2 },
+    mudgolem:       { id: 'mudgolem',       name: 'โคลนโกเลม',         hp: 250,  atk: 18, color: '#775533', tier: 2 },
+    iron_golem_t2:  { id: 'iron_golem_t2', name: 'โกเลมเหล็กกล้า',   hp: 280,  atk: 16, color: '#777788', tier: 2 },
+    raptor:         { id: 'raptor',         name: 'แรปเตอร์',          hp: 170,  atk: 35, color: '#339966', tier: 2 },
+    dryad:          { id: 'dryad',          name: 'ดรายแอด',           hp: 180,  atk: 28, color: '#22dd55', tier: 2 },
+    specter:        { id: 'specter',        name: 'สเปกเตอร์',         hp: 140,  atk: 42, color: '#5522aa', tier: 2 },
+    basilisk:       { id: 'basilisk',       name: 'บาซิลิสก์',         hp: 190,  atk: 33, color: '#227755', tier: 2 },
+    pixie:          { id: 'pixie',          name: 'พิกซี่',            hp: 130,  atk: 30, color: '#dd55cc', tier: 2 },
+    iron_crab:      { id: 'iron_crab',      name: 'ปูเกราะเหล็ก',      hp: 260,  atk: 24, color: '#998877', tier: 2 },
+    stone_sentinel: { id: 'stone_sentinel', name: 'เซนทิเนลหิน',       hp: 270,  atk: 20, color: '#aaaaaa', tier: 2 },
+    spore_cloud:    { id: 'spore_cloud',    name: 'เมฆสปอร์',          hp: 160,  atk: 29, color: '#bb55aa', tier: 2 },
+
+    // --- TIER 3 ---
+    griffin:        { id: 'griffin',        name: 'กริฟฟิน',           hp: 290,  atk: 46, color: '#ddaa44', tier: 3 },
+    demon:          { id: 'demon',          name: 'ปีศาจ',             hp: 350,  atk: 68, color: '#cc3311', tier: 3 },
+    lavaslime:      { id: 'lavaslime',      name: 'ลาวาสไลม์',        hp: 430,  atk: 54, color: '#ff5533', tier: 3 },
+    undeadking:     { id: 'undeadking',     name: 'ราชาอันเดด',        hp: 530,  atk: 65, color: '#aa22aa', tier: 3 },
+    werewolf:       { id: 'werewolf',       name: 'มนุษย์หมาป่า',     hp: 400,  atk: 59, color: '#444466', tier: 3 },
+    thunderbird:    { id: 'thunderbird',    name: 'นกสายฟ้า',          hp: 310,  atk: 58, color: '#eeee22', tier: 3 },
+    wyvern:         { id: 'wyvern',         name: 'ไวเวิร์น',          hp: 340,  atk: 55, color: '#228866', tier: 3 },
+    hellhound:      { id: 'hellhound',      name: 'เฮลฮาวนด์',         hp: 330,  atk: 62, color: '#ee4422', tier: 3 },
+    ice_phoenix:    { id: 'ice_phoenix',    name: 'ฟีนิกซ์น้ำแข็ง',   hp: 320,  atk: 56, color: '#77ddff', tier: 3 },
+    shadow_reaper:  { id: 'shadow_reaper',  name: 'ยมทูตทมิฬ',        hp: 280,  atk: 72, color: '#330055', tier: 3 },
+    crystal_golem:  { id: 'crystal_golem',  name: 'คริสตัลโกเลม',     hp: 450,  atk: 45, color: '#cc88ff', tier: 3 },
+    manticore:      { id: 'manticore',      name: 'แมนติคอร์',        hp: 380,  atk: 61, color: '#884422', tier: 3 },
+    plague_lord:    { id: 'plague_lord',    name: 'จ้าวโรคห่า',        hp: 360,  atk: 58, color: '#55aa33', tier: 3 },
+    frost_giant:    { id: 'frost_giant',    name: 'ยักษ์น้ำแข็ง',     hp: 480,  atk: 48, color: '#88ccff', tier: 3 },
+    wasp_colossus:  { id: 'wasp_colossus',  name: 'แตนยักษ์จอมพลัง',  hp: 300,  atk: 66, color: '#ffaa00', tier: 3 },
+    thorn_drake:    { id: 'thorn_drake',    name: 'มังกรหนาม',         hp: 370,  atk: 57, color: '#336644', tier: 3 },
+
+    // --- TIER 4 ---
+    dragon:         { id: 'dragon',         name: 'มังกรไฟ',           hp: 670,  atk: 96,  color: '#ff4444', tier: 4 },
+    chimera:        { id: 'chimera',        name: 'คิเมร่า',           hp: 600,  atk: 88,  color: '#44bb99', tier: 4 },
+    lich:           { id: 'lich',           name: 'ลิชพ่อมดมืด',      hp: 520,  atk: 108, color: '#7744aa', tier: 4 },
+    cerberus:       { id: 'cerberus',       name: 'เซอเบอรัส',         hp: 640,  atk: 94,  color: '#992222', tier: 4 },
+    phoenix:        { id: 'phoenix',        name: 'ฟีนิกซ์อมตะ',      hp: 580,  atk: 102, color: '#ff7700', tier: 4 },
+    abyss_dragon:   { id: 'abyss_dragon',   name: 'มังกรอเวจี',        hp: 720,  atk: 110, color: '#441155', tier: 4 },
+    archangel:      { id: 'archangel',      name: 'อัครทูตสวรรค์',    hp: 610,  atk: 105, color: '#eeeeff', tier: 4 },
+    fenrir:         { id: 'fenrir',         name: 'เฟนริว จ้าวหมาป่า', hp: 680,  atk: 101, color: '#aabbcc', tier: 4 },
+    hydra:          { id: 'hydra',          name: 'ไฮดราสามหัว',       hp: 750,  atk: 98,  color: '#224488', tier: 4 },
+    fallen_angel:   { id: 'fallen_angel',   name: 'เทวดาตกสวรรค์',    hp: 630,  atk: 107, color: '#554488', tier: 4 },
+
+    // --- TIER 5 ---
+    bahamut:        { id: 'bahamut',        name: 'บาฮามุท ดาร์กเนส', hp: 1150, atk: 165, color: '#223355', tier: 5 },
+    leviathan:      { id: 'leviathan',      name: 'เลเวียธาน จ้าวสมุทร', hp: 1300, atk: 150, color: '#114488', tier: 5 },
+    cthulhu:        { id: 'cthulhu',        name: 'คธูลู จ้าวแห่งความบ้าคลั่ง', hp: 1400, atk: 155, color: '#224433', tier: 5 },
+    odin:           { id: 'odin',           name: 'มหาเทพโอดิน',      hp: 1250, atk: 170, color: '#eebb33', tier: 5 },
+    tiamat:         { id: 'tiamat',         name: 'เทียมัท มารดามังกร', hp: 1450, atk: 160, color: '#9933ff', tier: 5 },
+    ragnarok:       { id: 'ragnarok',       name: 'รักนาร็อค ปลายโลก', hp: 1600, atk: 175, color: '#dd2200', tier: 5 },
+    world_serpent:  { id: 'world_serpent',  name: 'งูมิดการ์ด',        hp: 1500, atk: 162, color: '#115533', tier: 5 },
+};
+
+const RECIPES = [
+    // T1 -> T2
+    { in: ['slime', 'wolf'],          out: 'slimewolf' },
+    { in: ['slime_ice', 'wolf'],      out: 'ice_wolf' },
+    { in: ['wolf', 'bat'],            out: 'gargoyle' },
+    { in: ['slime', 'goblin'],        out: 'slimerider' },
+    { in: ['wolf', 'goblin'],         out: 'wolfrider' },
+    { in: ['bat', 'goblin'],          out: 'imp' },
+    { in: ['slime', 'bird'],          out: 'winged_slime' },
+    { in: ['wolf', 'bird'],           out: 'pegasus' },
+    { in: ['slime', 'fire_spirit'],   out: 'magma_slime' },
+    { in: ['goblin', 'turtle'],       out: 'turtle_shield' },
+    { in: ['bat', 'fire_spirit'],     out: 'phoenix_chick' },
+    { in: ['shadow_essence', 'bat'],  out: 'shadow_crawler' },
+    { in: ['cat', 'wolf'],            out: 'sabertooth' },
+    { in: ['rat', 'slime'],           out: 'rat_king' },
+    { in: ['mushroom', 'golem_stone'],out: 'mushroom_giant' },
+    { in: ['bee', 'goblin'],          out: 'bee_queen' },
+    { in: ['frog', 'fairy'],          out: 'frog_shaman' },
+    // T1 LOCKED -> T2
+    { in: ['slime', 'plant'],         out: 'poisonslime' },
+    { in: ['goblin', 'skeleton'],     out: 'orc' },
+    { in: ['bat', 'skeleton'],        out: 'vampire' },
+    { in: ['spider', 'plant'],        out: 'venomspider' },
+    { in: ['zombie', 'goblin'],       out: 'ghoul' },
+    { in: ['slime', 'golem_stone'],   out: 'mudgolem' },
+    { in: ['golem_stone', 'skeleton'],out: 'iron_golem_t2' },
+    { in: ['lizard', 'goblin'],       out: 'raptor' },
+    { in: ['fairy', 'plant'],         out: 'dryad' },
+    { in: ['ghost', 'bat'],           out: 'specter' },
+    { in: ['lizard', 'spider'],       out: 'basilisk' },
+    { in: ['fairy', 'slime'],         out: 'pixie' },
+    { in: ['crab', 'golem_stone'],    out: 'iron_crab' },
+    { in: ['skeleton', 'golem_stone'],out: 'stone_sentinel' },
+    { in: ['mushroom', 'zombie'],     out: 'spore_cloud' },
+    // T2 -> T3
+    { in: ['slimewolf', 'gargoyle'],       out: 'griffin' },
+    { in: ['orc', 'vampire'],              out: 'demon' },
+    { in: ['magma_slime', 'orc'],          out: 'lavaslime' },
+    { in: ['vampire', 'ghoul'],            out: 'undeadking' },
+    { in: ['ice_wolf', 'ghoul'],           out: 'werewolf' },
+    { in: ['winged_slime', 'gargoyle'],    out: 'thunderbird' },
+    { in: ['raptor', 'pegasus'],           out: 'wyvern' },
+    { in: ['wolfrider', 'magma_slime'],    out: 'hellhound' },
+    { in: ['ice_wolf', 'phoenix_chick'],   out: 'ice_phoenix' },
+    { in: ['shadow_crawler', 'specter'],   out: 'shadow_reaper' },
+    { in: ['iron_golem_t2', 'pixie'],      out: 'crystal_golem' },
+    { in: ['sabertooth', 'venomspider'],   out: 'manticore' },
+    { in: ['spore_cloud', 'ghoul'],        out: 'plague_lord' },
+    { in: ['iron_golem_t2', 'ice_wolf'],   out: 'frost_giant' },
+    { in: ['bee_queen', 'wolfrider'],      out: 'wasp_colossus' },
+    { in: ['frog_shaman', 'lizard'],       out: 'thorn_drake' },
+    { in: ['mushroom_giant', 'venomspider'], out: 'plague_lord' },
+    // T3 -> T4
+    { in: ['lavaslime', 'demon'],          out: 'dragon' },
+    { in: ['griffin', 'werewolf'],         out: 'chimera' },
+    { in: ['undeadking', 'shadow_reaper'], out: 'lich' },
+    { in: ['hellhound', 'demon'],          out: 'cerberus' },
+    { in: ['ice_phoenix', 'griffin'],      out: 'phoenix' },
+    { in: ['shadow_reaper', 'wyvern'],     out: 'abyss_dragon' },
+    { in: ['thunderbird', 'crystal_golem'],out: 'archangel' },
+    { in: ['werewolf', 'manticore'],       out: 'fenrir' },
+    { in: ['wyvern', 'lavaslime'],         out: 'hydra' },
+    { in: ['archangel', 'shadow_reaper'],  out: 'fallen_angel' },
+    // T4 -> T5
+    { in: ['dragon', 'chimera'],           out: 'bahamut' },
+    { in: ['dragon', 'phoenix'],           out: 'leviathan' },
+    { in: ['abyss_dragon', 'lich'],        out: 'cthulhu' },
+    { in: ['archangel', 'cerberus'],       out: 'odin' },
+    { in: ['fenrir', 'dragon'],            out: 'tiamat' },
+    { in: ['cerberus', 'fenrir'],          out: 'ragnarok' },
+    { in: ['hydra', 'leviathan'],          out: 'world_serpent' },
+    { in: ['fallen_angel', 'lich'],        out: 'cthulhu' },
+];
+
+const INITIAL_UNLOCKED = [
+    'slime','slime_ice','wolf','bat','goblin','bird','turtle','fire_spirit','shadow_essence','cat','rat',
+    'mushroom','bee','frog',
+    'slimewolf','ice_wolf','gargoyle','slimerider','wolfrider','imp','winged_slime','pegasus','magma_slime',
+    'turtle_shield','phoenix_chick','shadow_crawler','sabertooth','rat_king',
+    'mushroom_giant','bee_queen','frog_shaman'
+];
+
+// ==========================================
+// 2. Persistent Storage
+// ==========================================
+let persistentRecipes = JSON.parse(localStorage.getItem('monsterTacticsRecipes_v5')) || [...INITIAL_UNLOCKED];
+function savePersistentRecipes() { localStorage.setItem('monsterTacticsRecipes_v5', JSON.stringify(persistentRecipes)); }
+
+// ==========================================
+// 3. Engine & State
+// ==========================================
+let gameState = {
+    gold: 15, wave: 1, phase: 'PREPARE', pityCounter: 0, gachaBoxes: 2,
+    playerUnits: [], enemyUnits: [], effects: [],
+    unlockedSpecies: [...persistentRecipes]
+};
+let dragUnit = null; let mouseX = 0, mouseY = 0;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const CELL_SIZE = 56; const BENCH_GAP = 12;
+const GAME_WIDTH = CELL_SIZE * 5 + 40;
+const GAME_HEIGHT = (CELL_SIZE * 8) + BENCH_GAP + 60;
+canvas.width = GAME_WIDTH; canvas.height = GAME_HEIGHT;
+const GRID_START_X = (GAME_WIDTH - (5 * CELL_SIZE)) / 2;
+const GRID_START_Y = 30;
+
+function getCellXY(row, col) {
+    let cx = GRID_START_X + col * CELL_SIZE + CELL_SIZE / 2;
+    let cy = GRID_START_Y + row * CELL_SIZE + CELL_SIZE / 2;
+    if (row >= 6) cy += BENCH_GAP;
+    return { x: cx, y: cy };
+}
+window.onload = () => { if (localStorage.getItem('monsterTacticsSave_v5')) document.getElementById('btn-continue').classList.remove('hidden'); };
+function saveGame() {
+    if (gameState.phase !== 'PREPARE') return;
+    const saveObj = { gold: gameState.gold, wave: gameState.wave, pityCounter: gameState.pityCounter, gachaBoxes: gameState.gachaBoxes, playerUnits: gameState.playerUnits.map(u => ({ id: u.id, row: u.row, col: u.col, star: u.star, hp: u.hp })) };
+    localStorage.setItem('monsterTacticsSave_v5', JSON.stringify(saveObj));
+    document.getElementById('btn-continue').classList.remove('hidden');
+}
+function clearSave() { localStorage.removeItem('monsterTacticsSave_v5'); document.getElementById('btn-continue').classList.add('hidden'); }
+
+// ==========================================
+// 4. Combat Unit Object
+// ==========================================
+class Unit {
+    constructor(id, row, col, isEnemy=false, star=1) {
+        const t = MONSTERS[id] || MONSTERS['slime'];
+        this.id=id; this.name=t.name; this.color=t.color; this.star=star; this.tier=t.tier;
+        let multi = 1 + (0.5 * (this.star - 1));
+        this.maxHp = Math.floor(t.hp * multi); this.hp = this.maxHp; this.atk = Math.floor(t.atk * multi);
+        this.row=row; this.col=col; this.isEnemy=isEnemy;
+        let pos=getCellXY(row,col); this.x=pos.x; this.y=pos.y;
+        this.state='IDLE'; this.target=null; this.stateTimer=0;
+        this.isDragging=false; this.animFrame=Math.random()*10;
+        this.offsetX=0; this.offsetY=0;
+    }
+    update() {
+        if (this.state==='DEAD') return;
+        this.animFrame += 0.1;
+        if (gameState.phase==='COMBAT' && this.row<6) this.updateCombatAI();
+        else { this.offsetX=0; this.offsetY=Math.sin(this.animFrame)*3; }
+    }
+    updateCombatAI() {
+        if (!this.target || this.target.state==='DEAD') { this.target=this.findClosestTarget(); this.state='IDLE'; }
+        if (!this.target) return;
+        let dx=this.target.x-this.x, dy=this.target.y-this.y, dist=Math.sqrt(dx*dx+dy*dy);
+        if (dist>CELL_SIZE) {
+            this.state='MOVE'; this.x+=(dx/dist)*1.5; this.y+=(dy/dist)*1.5;
+            this.offsetY=Math.sin(this.animFrame*2)*4;
+        } else {
+            this.state='ATTACK'; this.stateTimer++;
+            if (this.stateTimer>=35) { this.performAttack(); this.stateTimer=0; }
         }
+    }
+    findClosestTarget() {
+        let targets=this.isEnemy?gameState.playerUnits:gameState.enemyUnits;
+        let closest=null, minDist=99999;
+        for (let t of targets) {
+            if (t.state==='DEAD'||(this.isEnemy&&t.row>=6)) continue;
+            let dist=Math.sqrt(Math.pow(t.x-this.x,2)+Math.pow(t.y-this.y,2));
+            if (dist<minDist) { minDist=dist; closest=t; }
+        }
+        return closest;
+    }
+    performAttack() {
+        if (!this.target||this.target.state==='DEAD') return;
+        this.offsetX=(this.target.x-this.x)*0.3; this.offsetY=(this.target.y-this.y)*0.3;
+        this.target.hp -= this.atk;
+        if (this.target.hp<=0) { this.target.hp=0; this.target.state='DEAD'; }
+        gameState.effects.push({x:this.target.x, y:this.target.y, text:`-${this.atk}`, color:'#ffcc00', duration:30});
+        setTimeout(()=>{ this.offsetX=0; this.offsetY=0; }, 100);
+    }
+    draw() {
+        if (this.state==='DEAD') return;
+        let renderX=this.isDragging?mouseX:this.x+this.offsetX;
+        let renderY=this.isDragging?mouseY:this.y+this.offsetY;
+        ctx.save();
+        // Shadow
+        ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(renderX, renderY+20, 22, 8, 0, 0, Math.PI*2); ctx.fill();
+        // Tier 3+ glow
+        if (this.tier>=3) {
+            let glowR=22+this.tier*4;
+            let grad=ctx.createRadialGradient(renderX,renderY,2,renderX,renderY,glowR);
+            grad.addColorStop(0, this.color+'66'); grad.addColorStop(1, this.color+'00');
+            ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(renderX,renderY,glowR,0,Math.PI*2); ctx.fill();
+        }
+        // Sprite
+        ctx.save(); ctx.translate(renderX, renderY);
+        if (this.isEnemy) ctx.scale(-1,1);
+        const img = MONSTER_IMAGES[this.id];
+        if (img && img.complete && img.naturalWidth > 0) {
+            // รูปภาพจริงจากโฟลเดอร์ monsters/
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(img, -22, -24, 44, 44);
+        } else {
+            // Fallback: วงกลมสีพร้อมอักษรแรก (สำหรับ Tier 2-5 ที่ยังไม่มีรูป)
+            ctx.fillStyle = this.color + 'aa';
+            ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = this.color; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Kanit';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(this.name.charAt(0), 0, 0); ctx.textBaseline = 'alphabetic';
+        }
+        ctx.restore();
+        // HP bar
+        let hpRatio=this.hp/this.maxHp;
+        ctx.fillStyle='#222'; ctx.fillRect(renderX-18,renderY-28,36,5);
+        ctx.fillStyle=this.isEnemy?'#ff3333':'#33ff33'; ctx.fillRect(renderX-18,renderY-28,36*hpRatio,5);
+        // Name & stars
+        ctx.fillStyle='#fff'; ctx.font='bold 11px Kanit'; ctx.textAlign='center';
+        ctx.shadowColor='#000'; ctx.shadowBlur=2; ctx.lineWidth=3; ctx.strokeStyle='#000';
+        ctx.strokeText(this.name,renderX,renderY-34); ctx.fillText(this.name,renderX,renderY-34);
+        ctx.fillStyle='#ffcc00'; ctx.font='10px Arial';
+        ctx.fillText('★'.repeat(this.star),renderX,renderY-44);
+        ctx.shadowBlur=0;
+        ctx.restore();
+    }
+}
 
-        const game = new GameEngine();
-        game.start();
-    </script>
+// ==========================================
+// 5. Gacha System
+// ==========================================
+function openGacha() {
+    if (gameState.gachaBoxes<=0) return;
+    gameState.gachaBoxes--; gameState.pityCounter++;
+    let allMonsters=Object.keys(MONSTERS);
+    let rolledId=null;
+    let lockedPool=allMonsters.filter(k=>!persistentRecipes.includes(k));
+    if (gameState.pityCounter>=10 && lockedPool.length>0) {
+        rolledId=lockedPool[Math.floor(Math.random()*lockedPool.length)];
+        gameState.pityCounter=0;
+    } else {
+        let rng=Math.random()*100, targetTier=1;
+        if (rng<40) targetTier=1;
+        else if (rng<70) targetTier=2;
+        else if (rng<87) targetTier=3;
+        else if (rng<96) targetTier=4;
+        else targetTier=5;
+        let tierPool=allMonsters.filter(k=>MONSTERS[k].tier===targetTier);
+        if (tierPool.length===0) tierPool=allMonsters;
+        rolledId=tierPool[Math.floor(Math.random()*tierPool.length)];
+    }
+    let isNew=!persistentRecipes.includes(rolledId);
+    if (isNew) {
+        persistentRecipes.push(rolledId);
+        savePersistentRecipes();
+        gameState.unlockedSpecies=[...persistentRecipes];
+        gameState.pityCounter=0;
+    }
+    let spot=getOpenSpot();
+    if (spot) {
+        let star=MONSTERS[rolledId].tier;
+        let u=new Unit(rolledId, spot.r, spot.c, false, star);
+        gameState.playerUnits.push(u);
+        if (isNew) {
+            logMsg(`🎉 ปลดล็อกสูตรใหม่ถาวร: [${u.name}] ${star}★`);
+            gameState.effects.push({x:u.x, y:u.y, text:'NEW!', color:'#ff33aa', duration:70});
+        } else {
+            logMsg(`🎁 ได้รับ: [${u.name}] ${star}★`);
+            gameState.effects.push({x:u.x, y:u.y, text:'DUP', color:'#aaa', duration:50});
+        }
+    } else {
+        logMsg('ช่องเต็ม! คืน +20 ทอง'); gameState.gold+=20;
+    }
+    updateUI(); saveGame();
+}
+
+// ==========================================
+// 6. Game Loop & Flow
+// ==========================================
+function spawnWave() {
+    gameState.enemyUnits=[];
+    let w=gameState.wave;
+    let pool=Object.keys(MONSTERS).filter(k=>MONSTERS[k].tier<=1+Math.floor(w/3));
+    let count=Math.min(3+Math.floor(w/3),8);
+    let spots=[];
+    for (let r=0;r<=2;r++) for (let c=0;c<5;c++) if (GRID_LAYOUT[r][c]===1) spots.push({r,c});
+    spots.sort(()=>Math.random()-0.5);
+    for (let i=0;i<count&&i<spots.length;i++) {
+        let id=pool[Math.floor(Math.random()*pool.length)];
+        let eStar=1+Math.floor(w/5); if(eStar>5) eStar=5;
+        gameState.enemyUnits.push(new Unit(id,spots[i].r,spots[i].c,true,eStar));
+    }
+}
+
+function buyRandomUnit() {
+    if (gameState.phase!=='PREPARE'||gameState.gold<5) return;
+    let spot=getOpenSpot(); if(!spot){logMsg('❌ คลังเต็ม!');return;}
+    gameState.gold-=5;
+    let pool=gameState.unlockedSpecies.filter(id=>MONSTERS[id].tier===1);
+    let id=pool[Math.floor(Math.random()*pool.length)];
+    gameState.playerUnits.push(new Unit(id,spot.r,spot.c,false,1));
+    logMsg(`🛒 ซื้อสำเร็จ: ${MONSTERS[id].name} 1★`);
+    updateUI(); saveGame();
+}
+
+function getOpenSpot() {
+    for (let r=6;r<=7;r++) for (let c=0;c<5;c++) if(!getUnitAtGrid(r,c)) return{r,c};
+    return null;
+}
+function getUnitAtGrid(r,c) { return gameState.playerUnits.find(u=>u.row===r&&u.col===c&&u.state!=='DEAD'); }
+
+function checkMerge(uA, uB) {
+    if (uA.id===uB.id) { logMsg('ℹ️ สายพันธุ์เดียวกัน'); return false; }
+    if (uA.star!==uB.star) { logMsg('⚠️ ระดับดาวไม่เท่ากัน!'); return false; }
+    for (let r of RECIPES) {
+        if ((r.in[0]===uA.id&&r.in[1]===uB.id)||(r.in[1]===uA.id&&r.in[0]===uB.id)) {
+            if (!gameState.unlockedSpecies.includes(r.out)) {
+                logMsg(`⚠️ ต้องปลดล็อก [${MONSTERS[r.out].name}] จากกล่องก่อน`); return false;
+            }
+            let newStar=Math.min(5,uA.star+1);
+            gameState.playerUnits=gameState.playerUnits.filter(u=>u!==uA&&u!==uB);
+            let f=new Unit(r.out,uB.row,uB.col,false,newStar);
+            gameState.playerUnits.push(f);
+            logMsg(`⚡ ฟิวชั่น!! ➔ "${f.name} ${newStar}★"`);
+            gameState.effects.push({x:f.x,y:f.y,text:'FUSION!',color:'#33ffcc',duration:60});
+            return true;
+        }
+    }
+    logMsg('❌ ไม่มีสูตรผสมสำหรับคู่นี้');
+    return false;
+}
+
+function startCombat() {
+    if (gameState.phase==='GAMEOVER') return;
+    let active=gameState.playerUnits.filter(u=>u.row<6);
+    if (active.length===0) { logMsg('⚠️ วางกองทัพในโซนสีน้ำเงินก่อน!'); return; }
+    gameState.phase='COMBAT'; updateUI(); logMsg('⚔️ ศึกเริ่มแล้ว!');
+}
+
+// ==========================================
+// 7. Event Handlers
+// ==========================================
+function getCanvasCoords(e) {
+    const rect=canvas.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:((cx-rect.left)/rect.width)*GAME_WIDTH, y:((cy-rect.top)/rect.height)*GAME_HEIGHT};
+}
+function handleStart(e) {
+    if (gameState.phase!=='PREPARE') return;
+    const coords=getCanvasCoords(e); mouseX=coords.x; mouseY=coords.y;
+    if (gameState.gachaBoxes>0&&mouseX>GAME_WIDTH-60&&mouseY>GAME_HEIGHT-60){openGacha();return;}
+    for (let u of gameState.playerUnits) {
+        if (Math.sqrt(Math.pow(u.x-mouseX,2)+Math.pow(u.y-mouseY,2))<28){dragUnit=u;u.isDragging=true;break;}
+    }
+}
+function handleMove(e) { if(dragUnit){e.preventDefault();let c=getCanvasCoords(e);mouseX=c.x;mouseY=c.y;} }
+function handleEnd(e) {
+    if (!dragUnit) return;
+    const sellZone=document.getElementById('sell-zone').getBoundingClientRect();
+    const cy=e.changedTouches?e.changedTouches[0].clientY:e.clientY;
+    if (cy>=sellZone.top&&cy<=sellZone.bottom) {
+        let price=dragUnit.star*4; gameState.gold+=price;
+        gameState.playerUnits=gameState.playerUnits.filter(u=>u!==dragUnit);
+        logMsg(`💰 ขาย: ${dragUnit.name} +${price}G`); dragUnit=null; updateUI(); saveGame(); return;
+    }
+    let targetCell=null;
+    for (let r=0;r<=7;r++) for (let c=0;c<5;c++) {
+        if (GRID_LAYOUT[r][c]<=1) continue;
+        let pos=getCellXY(r,c);
+        if (Math.abs(mouseX-pos.x)<CELL_SIZE/2&&Math.abs(mouseY-pos.y)<CELL_SIZE/2){targetCell={r,c};break;}
+    }
+    if (targetCell) {
+        let exist=getUnitAtGrid(targetCell.r,targetCell.c);
+        if (exist&&exist!==dragUnit) {
+            if (!checkMerge(dragUnit,exist)) {
+                exist.row=dragUnit.row; exist.col=dragUnit.col;
+                let px=getCellXY(exist.row,exist.col); exist.x=px.x; exist.y=px.y;
+                dragUnit.row=targetCell.r; dragUnit.col=targetCell.c;
+            }
+        } else { dragUnit.row=targetCell.r; dragUnit.col=targetCell.c; }
+    }
+    if (dragUnit){let pf=getCellXY(dragUnit.row,dragUnit.col);dragUnit.x=pf.x;dragUnit.y=pf.y;dragUnit.isDragging=false;dragUnit=null;}
+    saveGame();
+}
+canvas.addEventListener('mousedown',handleStart); canvas.addEventListener('mousemove',handleMove); canvas.addEventListener('mouseup',handleEnd);
+canvas.addEventListener('touchstart',handleStart,{passive:false}); canvas.addEventListener('touchmove',handleMove,{passive:false}); canvas.addEventListener('touchend',handleEnd);
+
+function update() {
+    gameState.playerUnits.forEach(u=>u.update()); gameState.enemyUnits.forEach(u=>u.update());
+    for (let i=gameState.effects.length-1;i>=0;i--) {
+        gameState.effects[i].y-=0.5; gameState.effects[i].duration--;
+        if (gameState.effects[i].duration<=0) gameState.effects.splice(i,1);
+    }
+    if (gameState.phase==='COMBAT') {
+        let pAlive=gameState.playerUnits.filter(u=>u.state!=='DEAD'&&u.row<6).length;
+        let eAlive=gameState.enemyUnits.filter(u=>u.state!=='DEAD').length;
+        if (eAlive===0) {
+            gameState.gold+=8+Math.floor(gameState.wave/2); gameState.wave++;
+            if (gameState.wave%3===0){gameState.gachaBoxes++;logMsg('🎁 บอสเวฟ! รับกล่องสุ่ม +1!');}
+            else logMsg(`⚔️ ชนะ! เวฟ ${gameState.wave}`);
+            gameState.phase='PREPARE';
+            gameState.playerUnits.forEach(u=>{u.state='IDLE';u.hp=u.maxHp;u.target=null;let p=getCellXY(u.row,u.col);u.x=p.x;u.y=p.y;});
+            spawnWave(); updateUI(); saveGame();
+        } else if (pAlive===0) {
+            gameState.phase='GAMEOVER'; clearSave(); logMsg('💀 พ่ายแพ้! เวฟ '+gameState.wave); updateUI();
+        }
+    }
+}
+
+function draw() {
+    ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+    for (let r=0;r<=7;r++) for (let c=0;c<5;c++) {
+        let type=GRID_LAYOUT[r][c]; if(type===0) continue;
+        let pos=getCellXY(r,c); let sx=pos.x-CELL_SIZE/2, sy=pos.y-CELL_SIZE/2;
+        ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1; ctx.strokeRect(sx,sy,CELL_SIZE,CELL_SIZE);
+        if (type===1){ctx.fillStyle='rgba(255,50,50,0.05)';ctx.fillRect(sx+2,sy+2,CELL_SIZE-4,CELL_SIZE-4);}
+        else if (type===2){ctx.fillStyle='rgba(50,100,255,0.05)';ctx.fillRect(sx+2,sy+2,CELL_SIZE-4,CELL_SIZE-4);}
+        else if (type===3){
+            ctx.fillStyle='rgba(150,150,150,0.08)'; ctx.fillRect(sx+2,sy+2,CELL_SIZE-4,CELL_SIZE-4);
+            ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.setLineDash([4,4]); ctx.strokeRect(sx+4,sy+4,CELL_SIZE-8,CELL_SIZE-8); ctx.setLineDash([]);
+        }
+    }
+    gameState.playerUnits.forEach(u=>u.draw()); gameState.enemyUnits.forEach(u=>u.draw());
+    if (gameState.gachaBoxes>0&&gameState.phase==='PREPARE') {
+        let gx=GAME_WIDTH-35, gy=GAME_HEIGHT-35+Math.sin(Date.now()/150)*3;
+        ctx.shadowColor='#ff33aa'; ctx.shadowBlur=15;
+        ctx.fillStyle='#ff33aa'; ctx.fillRect(gx-18,gy-18,36,36);
+        ctx.shadowBlur=0;
+        ctx.fillStyle='#fff'; ctx.font='20px Arial'; ctx.textAlign='center'; ctx.fillText('🎁',gx,gy+7);
+        ctx.font='bold 10px Kanit'; ctx.fillStyle='#ff33aa'; ctx.fillText(`เปิด (${gameState.gachaBoxes})`,gx,gy-22);
+    }
+    gameState.effects.forEach(f=>{ctx.fillStyle=f.color;ctx.font='bold 12px Kanit';ctx.textAlign='center';ctx.shadowColor='#000';ctx.shadowBlur=3;ctx.fillText(f.text,f.x,f.y);ctx.shadowBlur=0;});
+}
+
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+// ==========================================
+// 8. UI & Lifecycle
+// ==========================================
+function updateUI() {
+    document.getElementById('gold-text').innerText=`🪙 ทอง: ${gameState.gold}`;
+    document.getElementById('pity-text').innerText=`🌟 การันตีสูตรใหม่ในอีก: ${10-gameState.pityCounter} กล่อง`;
+    document.getElementById('wave-text').innerText=`WAVE ${gameState.wave}`;
+    let btnStart=document.getElementById('btn-start');
+    if (gameState.phase==='PREPARE') {
+        document.getElementById('btn-buy').disabled=gameState.gold<5;
+        btnStart.innerText='⚔️ เริ่มต่อสู้'; btnStart.style.background='linear-gradient(135deg,#ff4d4d,#b53030)'; btnStart.onclick=startCombat;
+    } else if (gameState.phase==='GAMEOVER') {
+        btnStart.innerText='🔄 เล่นใหม่'; btnStart.style.background='linear-gradient(135deg,#00aaff,#0056b3)'; btnStart.onclick=startGame;
+    } else {
+        document.getElementById('btn-buy').disabled=true;
+        btnStart.innerText='⚡ กำลังรบ'; btnStart.style.background='#555'; btnStart.onclick=null;
+    }
+}
+function logMsg(msg) { document.getElementById('log-box').innerText=msg; }
+function showMenu() { document.getElementById('main-menu').classList.remove('hidden'); }
+
+function openGuide() {
+    let html='';
+    let sortedRecipes=[...RECIPES].sort((a,b)=>MONSTERS[a.out].tier-MONSTERS[b.out].tier);
+    let seen=new Set();
+    sortedRecipes=sortedRecipes.filter(r=>{if(seen.has(r.out))return false;seen.add(r.out);return true;});
+    sortedRecipes.forEach(r=>{
+        if(!MONSTERS[r.in[0]]||!MONSTERS[r.in[1]]||!MONSTERS[r.out]) return;
+        let i1=MONSTERS[r.in[0]].name, i2=MONSTERS[r.in[1]].name;
+        let t1=MONSTERS[r.in[0]].tier, t2=MONSTERS[r.in[1]].tier;
+        if (persistentRecipes.includes(r.out)) {
+            html+=`<div class="recipe-row"><span>${i1} <span class="tier-badge">${t1}★</span> + ${i2} <span class="tier-badge">${t2}★</span></span> <span class="highlight">➔ ${MONSTERS[r.out].name} <span class="tier-badge" style="background:#33ffcc33">${MONSTERS[r.out].tier}★</span></span></div>`;
+        } else {
+            html+=`<div class="recipe-row recipe-unknown"><span>${i1} + ${i2}</span> <span>➔ 🔒 ???</span></div>`;
+        }
+    });
+    document.getElementById('guide-content').innerHTML=html;
+    document.getElementById('fusion-guide').classList.remove('hidden');
+}
+function closeGuide() { document.getElementById('fusion-guide').classList.add('hidden'); }
+
+function startGame() {
+    clearSave(); dragUnit=null; mouseX=0; mouseY=0; gameState.effects=[];
+    document.getElementById('main-menu').classList.add('hidden');
+    gameState={gold:15,wave:1,phase:'PREPARE',pityCounter:0,gachaBoxes:2,playerUnits:[],enemyUnits:[],effects:[],unlockedSpecies:[...persistentRecipes]};
+    gameState.playerUnits.push(new Unit('cat',6,1,false,1));
+    gameState.playerUnits.push(new Unit('wolf',6,3,false,1));
+    spawnWave(); updateUI(); saveGame();
+    logMsg('🔄 เริ่มการเดินทางใหม่! สูตรผสมสืบทอดเรียบร้อย');
+}
+function continueGame() {
+    const saved=localStorage.getItem('monsterTacticsSave_v5'); if(!saved) return;
+    dragUnit=null; let data=JSON.parse(saved);
+    gameState={gold:data.gold,wave:data.wave,phase:'PREPARE',pityCounter:data.pityCounter||0,gachaBoxes:data.gachaBoxes||0,unlockedSpecies:[...persistentRecipes],playerUnits:[],enemyUnits:[],effects:[]};
+    data.playerUnits.forEach(u=>{let unit=new Unit(u.id,u.row,u.col,false,u.star);unit.hp=u.hp;gameState.playerUnits.push(unit);});
+    document.getElementById('main-menu').classList.add('hidden');
+    spawnWave(); updateUI();
+}
+
+// ==========================================
+// START: โหลดรูปภาพก่อน แล้วค่อยเริ่มเกม
+// ==========================================
+preloadImages().then(() => {
+    spawnWave();
+    updateUI();
+    saveGame();
+    requestAnimationFrame(gameLoop);
+});
+</script>
 </body>
 </html>
