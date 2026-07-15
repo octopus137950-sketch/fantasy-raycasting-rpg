@@ -2,12 +2,20 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#05050a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Monster Tactics">
+    <link rel="manifest" href="manifest.json">
     <title>Monster Tactics: Infinite Legacy v5.0</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
+            --app-height: 100vh;
+        }
             --bg-dark: #0f0f1a;
             --bg-panel: #1a1a24;
             --bg-card: #22222d;
@@ -18,13 +26,21 @@
             --accent-purple: #9d4edd;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        html, body {
+            height: 100%;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
         body {
             background: radial-gradient(circle at center, #1a1a2e 0%, #05050a 100%);
             color: #fff; font-family: 'Kanit', sans-serif;
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: var(--app-height); min-height: var(--app-height); overflow: hidden;
+            position: fixed; inset: 0; width: 100%;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
         #game-container {
-            position: relative; width: 100%; max-width: 450px; height: 100vh; max-height: 850px;
+            position: relative; width: 100%; max-width: 450px; height: 100%; max-height: 850px;
             background: linear-gradient(180deg, #1e1e2a 0%, #15151c 100%);
             box-shadow: 0 0 40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05); 
             display: flex; flex-direction: column; border-radius: 12px; overflow: hidden;
@@ -392,6 +408,33 @@ function getCellXY(row, col) {
     if (row >= 6) cy += BENCH_GAP;
     return { x: cx, y: cy };
 }
+// ==========================================
+// Fullscreen / mobile viewport handling
+// ==========================================
+function setAppHeight() {
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+}
+setAppHeight();
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', setAppHeight);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', setAppHeight);
+
+function requestFullscreenMode() {
+    const el = document.documentElement;
+    const request = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (request && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        request.call(el).catch(() => {});
+    }
+    window.scrollTo(0, 1);
+}
+// Fullscreen must be triggered from a user gesture; hook into the first taps on the menu.
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.menu-btn, button').forEach(btn => {
+        btn.addEventListener('click', requestFullscreenMode, { once: false });
+    });
+}, { once: true });
+
 window.onload = () => { if (localStorage.getItem('monsterTacticsSave_v5')) document.getElementById('btn-continue').classList.remove('hidden'); };
 function saveGame() {
     if (gameState.phase !== 'PREPARE') return;
